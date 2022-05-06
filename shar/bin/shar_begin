@@ -1,0 +1,11 @@
+#!/bin/csh
+#Author: J. Greg Davidson
+#
+set noglob
+echo '#\!/bin/sh'
+echo '# This is a shell archive, meaning:'
+echo '# 1. Remove everything above the #\!/bin/sh line.'
+echo '# 2. Save the resulting text in a file.'
+echo '# 3. Execute the file with /bin/sh (not csh).'
+echo 'export PATH; PATH=/bin:$PATH'
+echo '#'

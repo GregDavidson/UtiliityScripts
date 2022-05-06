@@ -1,0 +1,7 @@
+#!/bin/csh
+#Author: J. Greg Davidson
+#
+set noglob
+shar_begin $argv
+shar $argv
+shar_end $argv

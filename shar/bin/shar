@@ -1,0 +1,16 @@
+#!/bin/csh
+#Author: J. Greg Davidson
+#
+set noglob
+set q = \' Q = \"
+foreach f ($argv)
+  echo "if test -f $q$f$q"
+  echo then
+  echo "	echo shar: over-writing existing file $Q$q$f$q$Q"
+  echo fi
+  echo "echo extracting $q$f$q"
+  echo "cat << \SHAR_EOF > $q$f$q"
+  cat $f
+  echo SHAR_EOF
+  echo '#'
+end

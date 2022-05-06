@@ -1,0 +1,12 @@
+#!/bin/csh
+#Author: J. Greg Davidson
+#
+set noglob
+set q = \'
+foreach d ($argv)
+  echo "if test ! -d $q$d$q"
+  echo then
+  echo "	mkdir $d"
+  echo fi
+  echo "cd $d"
+end
