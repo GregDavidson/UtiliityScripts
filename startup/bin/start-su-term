@@ -1,0 +1,36 @@
+#!/bin/ksh
+#   what: start-term - start up a nice terminal emulator
+#    who: J. Greg Davidson
+#   when: April 1996
+
+program=`basename $0`
+alias stderr='>&2 echo'
+die() { code=$1; shift; stderr "$@"; exit $code; }
+error() { code=$1; shift; die $code "$program error: $*"; }
+assert() { ($*) || error "Assertion ($*) failed!"; }
+
+have_program() { [ -n "`whence $1`" ]; }
+
+if have_program xtoolwait ; then
+  alias toolwait=xtoolwait
+elif ! have_program toolwait ; then
+  toolwait() { "$@" & sleep 2; }
+fi
+
+# Start a nice terminal emulator
+
+for term in gnome-terminal Eterm nxterm xterm; do
+  have_program $term && break
+done
+assert have_program $term
+root_bg='#ffff59995999'
+root_fg=white
+root_path="/sbin:/usr/sbin:$PATH"
+case "$term" in
+gnome-terminal) args="--foreground $root_fg --background $root_bg"
+	      args="$args --nologin --noutmp --command su" ;;
+Eterm) args="-b $root_bg -f $root_fg -e su" ;;
+*) args="-sb -bg $root_bg -fg root_fg -e su" ;;
+esac
+PS1_base='\! # ' PATH="$root_path" $term $args "$@" &
+sleep 2

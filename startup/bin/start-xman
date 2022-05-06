@@ -1,0 +1,23 @@
+#!/bin/ksh
+#   what: start-xman - nicely start up the best manual browser available
+#    who: J. Greg Davidson
+#   when: January 1999
+
+program=`basename $0`
+alias stderr='>&2 echo'
+die() { code=$1; shift; stderr "$@"; exit $code; }
+error() { code=$1; shift; die $code "$program error: $*"; }
+assert() { ($*) || error "Assertion ($*) failed!"; }
+
+have_program() { [ -n "`whence $1`" ]; }
+
+if have_program xtoolwait ; then
+  alias toolwait=xtoolwait
+elif ! have_program toolwait ; then
+  toolwait() { "$@" & sleep 2; }
+fi
+
+for man in "tkman -iconic" xman; do
+  have_program $man && break
+done
+have_program $man && toolwait $man "$@"

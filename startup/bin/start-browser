@@ -1,0 +1,34 @@
+#!/bin/ksh
+#   what: start-browser - nicely start up the best web browser available
+#    who: J. Greg Davidson
+#   when: January 1999
+
+program=`basename $0`
+alias stderr='>&2 echo'
+die() { code=$1; shift; stderr "$@"; exit $code; }
+error() { code=$1; shift; die $code "$program error: $*"; }
+assert() { ($*) || error "Assertion ($*) failed!"; }
+
+have_program() { [ -n "`whence $1`" ]; }
+
+if have_program xtoolwait ; then
+  alias toolwait=xtoolwait
+elif ! have_program toolwait ; then
+  toolwait() { "$@" & sleep 2; }
+fi
+
+if [ -z "$BROWSER" ]; then
+    cat << 'EOF' |
+	netscape	netscape
+	lynx		nxterm -font 9x15 -e lynx
+	arena		arena
+	true	
+    EOF
+    while read browser BROWSER ; do
+	have_program $browser && break
+    done
+    export BROWSER
+fi
+	
+have_program $BROWSER && [  -f /usr/doc/HTML/index.html ] &&
+    toolwait $BROWSER /usr/doc/HTML/index.html
