@@ -1,0 +1,22 @@
+#!/bin/bash
+program="${0##*/}"
+usage="$program [-{wuxga|4k}] image-file..."
+
+case "$1" in
+  -wuxga) w=1920; h=1200; shift ;; # images at least 4k
+  -4k) w=3840; h=216; shift ;; # images at least 4k
+  *) w=0; h=0 ;; # all images
+esac
+
+if (( $# < 1 )); then
+  echo "$usage" >&2; exit 2
+fi
+
+identify.im6 "${@}" |
+ awk -v min_w="$w" -v min_h="$h" '{
+  n=gensub(/\[[0-9]+\]$/, "", 1, $1);
+  w=gensub(/x[0-9]+$/, "", 1, $3);
+  h=gensub(/^[0-9]+x/, "", 1, $3)
+} w+0 >= min_w+0 && h+0 >= min_h+0 {
+  print w, h, n
+}'
