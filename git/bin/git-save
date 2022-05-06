@@ -1,0 +1,22 @@
+#!/bin/bash
+
+pgm="${0##/*}"
+usage="$pgm [ tar-file ] # run in git directory"
+usage_exit() {
+  echo "$usage" >&2
+  exit 2
+}
+
+[ -d .git ] || usage_exit
+project_dir='.'
+
+case "$#" in
+  0) tar_file="../${PWD##*/}" ;;
+  1) tar_file="$1" ;;
+  *) usage_exit ;;
+esac
+
+tar cf "$tar_file" \
+--exclude-vcs --exclude-vcs-ignores \
+--exclude-backups --exclude=target \
+"$target_dir"
