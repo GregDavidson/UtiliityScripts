@@ -1,0 +1,4 @@
+#!/bin/bash
+for f; do
+  kill $(ps agx | awk '$5~/(.*\/)?'$f'[- ].*/{print $1}')
+done
