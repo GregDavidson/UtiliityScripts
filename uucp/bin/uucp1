@@ -1,0 +1,5 @@
+#!/bin/csh
+@ i = $#argv - 1
+set uucp = '\!~uucp/'
+uucp ${argv}${uucp}$argv[$i]
+echo uucp ${argv}${uucp}$argv[$i]
