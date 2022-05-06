@@ -1,0 +1,4 @@
+#!/bin/csh
+foreach f ($argv)
+  cat $f | sed '/^$/q'
+end

@@ -1,0 +1,5 @@
+inc -file $HOME/mail/$USER -truncate > /dev/null
+echo 'Sorting mail . . .'
+sort-inbox
+#folders +read
+echo 'done.'

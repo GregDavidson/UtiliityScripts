@@ -1,0 +1,9 @@
+folder=$1
+shift
+if expr "$folder" : '^+' > /dev/null ; then
+    :
+else
+    folder="+read/$folder"
+fi
+pick "$folder" $* -sequence xpick
+scan "$folder" xpick | xmessage -fn 6x10 -name "$folder $*" -buttons quit -file - &

@@ -1,0 +1,8 @@
+folder=$1
+shift
+if expr "$folder" : '^+' > /dev/null ; then
+    :
+else
+    folder="+read/$folder"
+fi
+scan "$folder" | xmessage -fn 5x8 -name $folder -buttons quit -file - $* &

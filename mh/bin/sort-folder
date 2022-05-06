@@ -1,0 +1,101 @@
+folder $1
+
+to2() { pick=`pick -to "$1" -sequence $2 2>&1`
+       case "$pick" in
+	'pick: no messages in folder') ;;
+	'pick: no messages match specification') ;;
+	*) echo pick -to $@ '->' $pick ;;
+       esac
+}
+cc2() { pick=`pick -nozero -cc "$1" -sequence $2 2>&1`
+       case "$pick" in
+	'pick: no messages in folder') ;;
+	'pick: no messages match specification') ;;
+	*) echo pick -cc $@ '->' $pick ;;
+       esac
+}
+to() { pick=`pick -to $@ -sequence $1 2>&1`
+       case "$pick" in
+	'pick: no messages in folder') ;;
+	'pick: no messages match specification') ;;
+	*) echo pick -to $@ '->' $pick ;;
+       esac
+}
+cc() { pick=`pick -nozero -cc $@ -sequence $1 2>&1`
+       case "$pick" in
+	'pick: no messages in folder') ;;
+	'pick: no messages match specification') ;;
+	*) echo pick -cc $@ '->' $pick ;;
+       esac
+}
+
+to bisexual -or -to bisexu-l
+to gaynet
+to alternates
+to gutnberg -or --Sender gutnberg
+to greg -or -to jgd
+to sdsysmgr
+to sdslug -or -to slug
+to league
+to postgres
+to litprog
+to haskell -or -to haskld-l
+to ml -or -to sml-list
+to2 ' es@' es
+to2 aquarius-prolog aquarius
+to lpf
+to kbse
+
+cc bisexual -or -cc bisexu-l
+cc gaynet
+cc alternates
+cc gutnberg
+cc greg -or -to jgd
+cc sdsysmgr
+cc slug
+cc leagu
+cc postgres
+cc litprog
+cc haskell -or -cc haskld-l
+cc ml -or -cc sml-list
+cc2 ' es@' es
+cc2 aquarius-prolog aquarius
+cc lpf
+cc kbse
+
+rf() {	scan=`scan $1 3>&1 >&- 1>&2 2>&- 2>&3`
+	# 	(echo ${1}: ; scan $1) >/dev/tty
+	refile=`refile $1 +read/$1 $2 $3 $4 $5 $6 $7 $8 $9 2>&1`
+       case "$refile" in
+	'refile: no messages in folder') ;;
+	"refile: bad message list $1") ;;
+	*) echo refile +read/$1 $2 $3 $4 $5 $6 $7 $8 $9 '	' $refile ;;
+       esac
+}
+
+rf2() {	scan=`scan $1 3>&1 >&- 1>&2 2>&- 2>&3`
+	# 	(echo ${1}: ; scan $1) >/dev/tty
+	refile=`refile $1 +read/$2 $3 $4 $5 $6 $7 $8 $9 2>&1`
+       case "$refile" in
+	'refile: no messages in folder') ;;
+	"refile: bad message list $1") ;;
+	*) echo refile +read/$2 $3 $4 $5 $6 $7 $8 $9 '	' $refile ;;
+       esac
+}
+
+rf bisexual	+old/bisexu-l
+rf gaynet
+rf alternates 	+news/alternates
+rf gutnberg
+rf greg
+rf sdsysmgr
+rf sdslug
+rf league
+rf postgres
+rf litprog
+rf haskell
+rf ml	
+rf es	
+rf2 aquarius aquarius-prolog
+rf lpf
+rf kbse

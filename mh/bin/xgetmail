@@ -1,0 +1,5 @@
+#!/bin/csh -f
+inc -file ~/mail/$user -truncate > /dev/null
+echo 'Sorting mail . . .'
+sort-inbox >& /dev/null
+echo 'done.'

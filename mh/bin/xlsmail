@@ -1,0 +1,6 @@
+:
+#ls -sF $HOME/mail | awk '$1 != 0 && $1 != "total" && $2 !~ /^.*\/$/' | xmessage -name 'Mail Spool Files' -buttons quit -file - $* &
+while ls -sF $HOME/mail | awk '$1 != 0 && $1 != "total" && $2 !~ /^.*\/$/' | xmessage -name 'New mail in:' -buttons update:0,quit:1 -file - $*
+do
+  :
+done

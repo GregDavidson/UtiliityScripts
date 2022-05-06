@@ -1,0 +1,15 @@
+:
+fn="-fn 5x8"
+#fn=
+if [ $# -lt 1 ] ; then
+  folder=+read
+else
+  folder=$1
+  shift
+  if expr "$folder" : '^+' > /dev/null ; then
+      :
+  else
+      folder="+read/$folder"
+  fi
+fi
+exec folders "$folder" | xmessage $fn -name "$folder" -buttons quit -file - $*
