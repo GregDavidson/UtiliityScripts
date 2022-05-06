@@ -1,0 +1,18 @@
+* OrgLinks
+
+** Goals:
+
+- Find all org links in org files
+       - possibly in scripts as well??
+	- maybe just scripts linked to by orgmode files!!
+- Store them conveniently in a repository link index orgfile
+- Check all org links for validity
+	- convert absolute links to relative links
+	- optimize relative links
+- Have =git mv= update any links to the moved file
+
+** Scripts
+
+- [[file:../bin/index-org-links][index-org-links]] :: latest
+	- dependent on =rg= aka =ripgrep=
+- [[file:../bin/org-links.bash][org-links.bash]] :: obsolete??
