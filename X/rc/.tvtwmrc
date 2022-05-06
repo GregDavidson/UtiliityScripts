@@ -1,0 +1,184 @@
+# ~greg/.tvtwmrc
+
+# VARIABLES:
+
+#ClientBorderWidth
+#DecorateTransients
+DontMoveOff
+NoGrabServer
+PannerBackgroundPixmap "gray"
+PannerGeometry "+0-0"
+#PannerScale 16
+#RandomPlacement
+RestartPreviousState
+ScrollDistanceX 100
+ScrollDistanceY 100
+ShowIconManager
+#ShowVirtualNames
+SortIconManager
+VirtualDesktop "1x2"
+VirtualDesktopBackgroundPixmap "gray"
+WarpCursor
+Zoom
+
+MenuFont "-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-*-*"
+ResizeFont "-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-*-*"
+TitleFont "-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-*-*"
+IconFont "-adobe-helvetica-bold-r-normal--*-100-*-*-*-*-*-*"
+IconManagerFont "-adobe-helvetica-bold-r-normal--*-100-*-*-*"
+
+#AutoRaise
+#{
+#	"TWM Icon Manager"
+#	"xclock"
+#	"xeyes"
+#}
+
+NoTitle
+{
+	"xclock"
+	"xpostit"
+	"xman"
+}
+
+Monochrome
+{
+	DefaultForeground	"black"
+	DefaultBackground	"white"
+	BorderColor	"black"
+	TitleForeground	"black"
+	TitleBackground	"white"
+	MenuForeground	"black"
+	MenuBackground	"white"
+	BorderTileBackground "black"
+	{
+		"xclock" "white"
+		"xpostit" "white"
+		"xman" "white"
+		"Calculator" "white"
+		"Virtual Desktop" "white"
+	}
+	BorderTileForeground "white"
+	{
+		"xclock" "white"
+		"xpostit" "white"
+		"xman" "white"
+		"Calculator" "white"
+		"Virtual Desktop" "white"
+	}
+}
+
+Sticky
+{
+	"xclock"
+	"xpostit"
+	"xman"
+}
+
+IconManagerDontShow
+{
+	"xclock"
+	"xpostit"
+	"xman"
+}
+
+IconManagerGeometry "-0+0" 3
+
+#IconManagers
+#{
+#  "Manual Page" "-150+0" 1
+#  "emacs" "-300+0" 1
+#  "xpostit" "-450+0" 1
+#}
+
+# BINDINGS
+
+"Left"	= m : all : f.scrollleft
+"Right"	= m : all : f.scrollright
+"Up"	= m : all : f.scrollup
+"Down"	= m : all : f.scrolldown
+"Home"	= m : all : f.scrollhome
+
+#
+# Define some useful functions for motion-based actions.
+#
+MoveDelta 3
+Function "move-or-lower" { f.move f.deltastop f.lower }
+Function "move-or-raise" { f.move f.deltastop f.raise }
+Function "move-or-iconify" { f.move f.deltastop f.iconify }
+Function "raise-move" { f.raise f.deltastop f.move }
+Function "lower-move" { f.lower f.deltastop f.move f.lower }
+Function "iconify-move" { f.iconify f.deltastop f.move }
+
+#
+# Set some useful bindings.  Sort of uwm-ish, sort of simple-button-ish
+#
+Button1 = : root : f.menu "defops"
+Button2 = : root : f.menu "Hosts_menu"
+Button3 = : root : f.menu "Tools_menu"
+
+Button1 =   m : window|icon : f.function "raise-move"
+Button1 = s m : window|icon : f.function "lower-move"
+Button2 =   m : window|icon : f.function "iconify-move"
+Button3 =   m : window|icon : f.resize
+
+Button1 = : title : f.function "move-or-raise"
+Button2 = : title : f.raiselower
+
+Button1 = : icon : f.function "move-or-iconify"
+Button2 = : icon : f.iconify
+
+Button1 = : iconmgr : f.iconify
+Button2 = : iconmgr : f.iconify
+
+# MENUS
+
+#
+# And a menus with the usual things
+#
+menu "defops"
+{
+"Twm"	f.title
+"Iconify"	f.iconify
+"Resize"	f.resize
+"Move"		f.forcemove
+"Raise"		f.raise
+"Lower"		f.lower
+""		f.nop
+"Focus"		f.focus
+"Unfocus"	f.unfocus
+"Show Iconmgr"	f.showiconmgr
+"Hide Iconmgr"	f.hideiconmgr
+""		f.nop
+"(No)Stick"	f.stick
+""		f.nop
+"Kill"		f.destroy
+"Delete"	f.delete
+""		f.nop
+"Restart"	f.restart
+"Exit"		f.quit
+}
+
+menu "Hosts_menu"
+{
+"User shell"	f.title
+"vis" !"rsh -n vis exec xow xterm -ls -display $DISPLAY -T vis -n vis&"
+#"foo" !"rsh -n foo exec /usr/bin/X11/xterm -ls -display $DISPLAY -T foo -n foo&"
+"bar" !"rsh -n bar exec /usr/bin/X11/xterm -ls -display $DISPLAY -T bar -n bar&"
+""	f.nop
+"Root shell"	f.title
+"vis" !"rsh -n -l root vis exec xow xterm -ls -rv -display $DISPLAY -T vis:root -n vis:root&"
+#"foo" !"rsh -n -l root foo exec /usr/bin/X11/xterm -ls -rv -display $DISPLAY -T foo -n foo&"
+"bar" !"rsh -n -l root bar exec /usr/bin/X11/xterm -ls -rv -display $DISPLAY -T bar:root -n bar:root&"
+}
+
+menu "Tools_menu"
+{
+"Tools" f.title
+"Shell" !"/usr/bin/X11/xterm -display $DISPLAY -T Shell -n shell&"
+"Emacs" !"/local//bin/emacs/emacs -display $DISPLAY&"
+"Postits" !"/usr/bin/X11/xpostit -display $DISPLAY -geometry 120x120+0+150 -title Postit_Pad&"
+"Calendar" !"/usr/bin/X11/xcalendar -display $DISPLAY&"
+"Unix Manual" !"/usr/bin/X11/xman -display $DISPLAY -title Unix&"
+"Calculator" !"/usr/bin/X11/xcalc -display $DISPLAY -title Calculator&"
+}

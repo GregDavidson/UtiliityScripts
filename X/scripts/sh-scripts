@@ -1,0 +1,80 @@
+To: xpert@x.org
+Date: Thu, 24 Mar 1994 07:32:02 GMT
+From: kurango.cit.gu.edu.au!anthony@trout.nosc.mil (Anthony Thyssen)
+Organization: Griffith University, CIT.
+Subject: Re: display motd under X (was Re: (none))
+
+
+elf@ee.ryerson.ca (luis fernandes) writes:
+| In article <9403220909.AA17150@vingmed.no> 
+|  oaf@vingmed.NO (Ole Asbjorn Fadum) writes:
+|
+|    How could I display 'message of the day '
+|    when running X and xdm?
+|
+| Last summer, I hacked together a program `xbanner' that we use here
+| to display the motd whenever a user logs-in. (took me about .5 hrs
+| :-)
+
+Why write one -- I just use a xmessage to display the motd. I also use it
+to great a logout button on the screen. And It is very usfull to just
+popup message or ask a simple question in any script requiring it.
+
+
+DisplayMOTD  a shell function I define in the Xsession file
+and use before calling the users xsession setup. NOTE the hushlogin
+check.
+--------------8<-----------CUT HERE--------------8<---------------
+DisplayMOTD() {   # present the MOTD and time to passwd expiry
+  if [ ! -r $HOME/.hushlogin ]; then
+     xmessage -name "MOTD" -file - -g +$Xcenter+200 </etc/motd &
+  fi
+}
+--------------8<-----------CUT HERE--------------8<---------------
+
+
+SessionError  - another shell function to use when something goes wrong.
+--------------8<-----------CUT HERE--------------8<---------------
+SessionError() {  # Session reached an impossible point -- error condition
+  echo "Error in starting session -- Please notify System Operators"
+  xmessage -g +5+5 \
+       "Error in starting session -- Please notify System Operators"
+  exit 0
+}
+--------------8<-----------CUT HERE--------------8<---------------
+
+
+Here is a shell script which provides a logout button on the screen
+This is normally called (exec'd) last in the default Users Xsession
+(Which the Users copy for their own use). Very Usful, and stops
+the need for the window manager. 
+--------------8<-----------CUT HERE--------------8<---------------
+#!/bin/sh -
+#
+#  This uses the xmessage program to create a Xlogout type button
+#
+exit=
+while [ ! "$exit" ]; do
+  xmessage -name xlogout -title xlogout "$@" \
+        -buttons "" -xrm '*message.borderWidth: 0' \
+	-xrm '*Translations: #override <BtnDown>: exit(0)' \
+	-xrm '*Font: -*-new cent*-bold-r-normal--24-*' \
+	'Logout'
+  [ $? -ne 0 ] && exit=true
+  if [ ! "$exit" ]; then
+    xmessage -name xlogout -title xlogout "$@" \
+        -buttons 'Cancel:0,Logout:1' -xrm '*message.borderWidth: 0' \
+	-xrm '*Font: -*-new cent*-bold-r-normal--18-*' \
+	'Are You Sure?'
+    [ $? -ne 0 ] && exit=true
+  fi
+done
+--------------8<-----------CUT HERE--------------8<---------------
+
+
+  Anthony Thyssen - (SysProg @ Griffith University)     anthony@cit.gu.edu.au
+------------------------------------------------------------------------------
+     That's the thing about people who think they hate computers.
+           What they really hate is lousy programmers.
+                        - Larry Niven and Jerry Pournelle, "Oath of Fealty"
+------------------------------------------------------------------------------

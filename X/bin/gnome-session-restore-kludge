@@ -1,0 +1,118 @@
+#!/bin/bash
+# name :  restore-session
+# author : Matt Keenan (matt.keenan@sun.com)
+# Date : Oct 2008
+#
+# restore-session is a quick means of restoring your apps locations 
+# and geometry. It can be used in conjunction with Gnome 2.24 gnome-sessiojn
+# autostart feature, as the save session feature for gnome-session in Gnome
+# 2.24 does not exist.
+#
+# It uses wnckprop to position and resize known application windows as
+# specified and identified in $HOME/.config/restore-session.conf
+#
+# The format of restore-session.conf is :
+#
+# <App Name> <Workspace (starting at 0)> <X-CoOrd> <Y-CoOrd>
+#
+# It has been written to work with both metacity and compiz, with metacity
+# wnckprop --set-workspace is used, but as with compiz there is only one
+# workspace and 4 viewports, the moving to another viewport  is achieved
+# by increasing the X CoOrdinate by screen widths.
+
+# Saved Session Data file
+SAVED_SESSION=$HOME/.config/restore-session.conf
+
+# Check if Compiz or metacity running, hacky would be nice to have
+# something better
+wnckprop --window=`wnckprop --list | head -1 | awk 'BEGIN {FS=": ";}{print $1;}'` | grep compiz > /dev/null
+if [ $? -eq 0 ]; then
+    compiz=1
+else
+    compiz=0
+fi
+
+# Get Screen width (only needed when using compiz)
+if [ $compiz -eq 1 ]; then
+    screen_width=`xdpyinfo | grep "  dimensions:" | awk ' {    \
+        dimstr=substr($0, 18, 10);      \
+        if (index(dimstr, "x") == 5) {  \
+            print substr(dimstr, 1, 4); \
+        } else {                        \
+            print substr(dimstr, 1, 3); \
+        }                               \
+    }'`
+fi
+
+# Get List of current windows
+wnckprop --list > /tmp/$$.wnckprop 2>&1
+
+lineno=0
+while read LINE
+do
+    if [ $lineno -eq 0 ]; then
+        # Skip first line, just column headers
+        let lineno=$lineno+1
+    else
+        win_title=`echo $LINE | awk '{print $1}'`
+        win_workspace=`echo $LINE | awk '{print $2}'`
+        win_x=`echo $LINE | awk '{print $3}'`
+        win_y=`echo $LINE | awk '{print $4}'`
+        win_width=`echo $LINE | awk '{print $5}'`
+        win_height=`echo $LINE | awk '{print $6}'`
+
+        win_id=`grep $win_title /tmp/$$.wnckprop | head -1 | awk 'BEGIN {FS=": ";}{print $1;}'`
+
+        echo "$win_title $win_workspace $win_x $win_y $win_width $win_height"
+
+        if [ "$win_id" != "" ]; then
+            
+            if [ $win_x -gt -1 ]; then
+                x_opt="--set-x=$win_x"
+            else
+                x_opt="--set-x=$win_x"
+            fi
+
+            if [ $win_y -gt -1 ]; then
+                y_opt="--set-y=$win_y"
+            else
+                y_opt="--set-y=$win_y"
+            fi
+
+            if [ $win_width -gt 0 ]; then
+                width_opt="--set-width=$win_width"
+            else
+                width_opt=""
+            fi
+
+            if [ $win_height -gt 0 ]; then
+                height_opt="--set-height=$win_height"
+            else
+                height_opt=""
+            fi
+
+            if [ $compiz -eq 1 ]; then
+                # if x > current screen width then just use it. As it and
+                # ignore workspace column otherwise use workspace column
+                # to calculate new x coord to position in correct viewport
+                if [ $win_x -gt $screen_width ]; then
+                    x_opt="--set-x=$win_x"
+                else
+                    let new_x=$screen_width*$win_workspace
+                    let new_x=$new_x+$win_x
+                    x_opt="--set-x=$new_x"
+                fi
+
+                # echo "$win_title:$win_workspace : wnckprop --window=$win_id $x_opt $y_opt $width_opt $height_opt"
+                wnckprop --window=$win_id $x_opt $y_opt $width_opt $height_opt
+            else
+                # echo "$win_title:$win_workspace : wnckprop --window=$win_id --set-workspace=$win_workspace $x_opt $y_opt $width_opt $height_opt"
+                wnckprop --window=$win_id --set-workspace=$win_workspace $x_opt $y_opt $width_opt $height_opt
+            fi
+        else
+            echo "$win_title:$win_workspace - Failed to get win_id"
+        fi
+    fi
+done < $SAVED_SESSION
+
+rm /tmp/$$.wnckprop

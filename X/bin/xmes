@@ -1,0 +1,26 @@
+#!/bin/sh
+
+if [ $# -lt 2 ] ; then
+  echo Usage: $0 {arguments for xmessage} -- {program to pipe into it}
+  exit 1
+fi
+xmes_fn="-fn 5x7"
+xmes_buttons="-buttons quit"
+xmes_file="-file -"
+xmes_name=TBD
+xmes_args=""
+while [ $# -ne 0 ] ; do
+  case $1 in
+    -fn)      xmes_fn="$1 $2" ;      shift ;;
+    -buttons) xmes_buttons="$1 $2" ; shift ;;
+    -file)    xmes_file="$1 $2" ;    shift ;;
+    -name)    xmes_name="$2" ;    shift ;;
+    --)       shift ; break ;;
+    *) xmes_args="$xmes_args $1" ;;
+  esac
+  shift
+done
+if [ $xmes_name = 'TBD' ] ; then
+  xmes_name="$*"
+fi
+$* | xmessage $xmes_fn $xmes_buttons $xmes_file -name "$xmes_name" $xmes_args &

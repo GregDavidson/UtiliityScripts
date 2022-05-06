@@ -1,0 +1,20 @@
+#!/bin/sh -
+#
+#  This uses the xmessage program to create a Xlogout type button
+#
+exit=
+while [ ! "$exit" ]; do
+  xmessage -name xlogout -title xlogout "$@" \
+        -buttons "" -xrm '*message.borderWidth: 0' \
+        -xrm '*Translations: #override <BtnDown>: exit(0)' \
+        -xrm '*Font: -*-new cent*-bold-r-normal--24-*' \
+        'Logout'
+  [ $? -ne 0 ] && exit=true
+  if [ ! "$exit" ]; then
+    xmessage -name xlogout -title xlogout "$@" \
+        -buttons 'Cancel:0,Logout:1' -xrm '*message.borderWidth: 0' \
+        -xrm '*Font: -*-new cent*-bold-r-normal--18-*' \
+        'Are You Sure?'
+    [ $? -ne 0 ] && exit=true
+  fi
+done

@@ -1,0 +1,29 @@
+! ~greg/.Xdefaults
+!
+xterm.ScrollBar:	on
+xterm.VisualBell:	on
+xterm.font:	6x10
+xterm.saveLines:	120
+xterm.visualBell:	true
+xterm.borderWidth:	2
+!xterm.ttyModes:	intr ^c erase ^? kill ^u
+!
+!emacs.font: 6x10
+!
+xman.background: gray
+!
+OpenWindows.WorkspaceColor:	#40a0c0
+OpenWindows.IconLocation:	bottom
+OpenWindows.SetInput:	followmouse
+!
+MakeWindow.ClipToScreen:	on
+MakeWindow.Freeze:	on
+!
+xshell.Flash:	1
+xshell.Volume:	5
+xshell.WindowGeometry:	=+100+2
+xshell.action.#:	xterm =80x24 -fn 6x10 -e su
+xshell.action.$:	xterm =80x24 -fn 6x10 -e sh
+xshell.action.%:	xterm =80x24 -fn 6x10 -e csh
+xshell.action.e:	emacs -i
+xshell.action.s:	xterm =80x34

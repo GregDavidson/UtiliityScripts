@@ -1,0 +1,114 @@
+#!/bin/bash
+# name :  save-session
+# author : Matt Keenan (matt.keenan@sun.com)
+# Date : Oct 2008
+#
+# save-session is used in conjunction with restore-session, it is used to 
+# generate $HOME/.config/restore-session.conf file, which should be viewed
+# and edited after generation to confirm accuracy.
+#
+# It uses wnckprop to determine workspace and geometry information.
+#
+# The format of restore-session.conf is :
+#
+# <App Name> <Workspace (starting at 0)> <X-CoOrd> <Y-CoOrd>
+#
+# NOTE : If running compiz window manager, workspace location of windows
+# is determined based on the X Co-ordinate. To ensure this is correct
+# Ths script must be run from the first Viewport(worksace).
+# For metacity this does not matter, as wnckprop will report the correct
+# workspace.
+
+function panel_or_nautilus() {
+    wnckprop --window=$win_id | grep "Bottom Expanded Edge Panel" > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "1"
+    else
+        wnckprop --window=$win_id | grep "x-nautilus-desktop" > /dev/null
+        if [ $? -eq 0 ]; then
+            echo "1"
+        else
+            echo "0"
+        fi
+    fi
+}
+
+# Saved Session Data file
+SAVED_SESSION=$HOME/.config/restore-session.conf
+
+if [ -s $SAVED_SESSION ]; then
+    echo "Backing up previous $SAVED_SESSION file to $SAVED_SESSION.old.`date '+%d-%m-%y--%H:%M:%S'`"
+    mv $SAVED_SESSION $SAVED_SESSION.old.`date '+%d-%m-%y--%H:%M:%S'`
+fi
+
+echo "#NAME	WORKSPACE	X	Y	WIDTH	HEIGHT" >> $SAVED_SESSION
+
+# Check if Compiz or metacity running, hacky would be nice to have
+# something better
+wnckprop --window=`wnckprop --list | head -1 | awk 'BEGIN {FS=": ";}{print $1;}'` | grep compiz > /dev/null
+if [ $? -eq 0 ]; then
+    compiz=1
+else
+    compiz=0
+fi
+
+# Get Screen width (only needed when using compiz)
+if [ $compiz -eq 1 ]; then
+    screen_width=`xdpyinfo | grep "  dimensions:" | awk ' {    \
+        dimstr=substr($0, 18, 10);      \
+        if (index(dimstr, "x") == 5) {  \
+            print substr(dimstr, 1, 4); \
+        } else {                        \
+            print substr(dimstr, 1, 3); \
+        }                               \
+    }'`
+fi
+
+# Get List of current windows
+wnckprop --list > /tmp/$$.wnckprop 2>&1
+
+while read LINE
+do
+    win_id=`echo $LINE | awk 'BEGIN {FS=": ";}{print $1;}'`
+
+    echo "$LINE";
+
+    if [ "$win_id" != "" ]; then
+
+        # Skip panel and nautilus
+        skip=`panel_or_nautilus`
+        if [ $skip -eq 0 ]; then
+            win_title=`wnckprop --window=$win_id | grep ^Name | awk '{ \
+                title=$2; for (i=3; i<=NF; i++) title=title " " $i; print title;}'`
+            win_x=`wnckprop --window=$win_id | grep Geometry | awk '{print substr($6, 1, length($6)-1);}'`
+            win_y=`wnckprop --window=$win_id | grep Geometry | awk '{print substr($7, 1, length($7)-1);}'`
+            win_width=`wnckprop --window=$win_id | grep Geometry | awk '{print substr($8, 1, length($8)-1);}'`
+            win_height=`wnckprop --window=$win_id | grep Geometry | awk '{print $9;}'`
+            if [ $compiz -eq 1 ]; then
+                # Workspace is determined based on X Co-ordinate / screen-width
+                if [ $win_x -lt $screen_width ]; then
+                    win_workspace=0
+                elif [ $win_x -lt 0 ]; then
+                    win_workspace=0
+                else
+                    let win_workspace=$win_x/$screen_width
+                    if [ $win_workspace > 0 ]; then
+                        let new_x=$screen_width*$win_workspace
+                        let win_x=$win_x-$new_x
+                    fi
+                fi
+            else
+                win_workspace=`wnckprop --window=$win_id | grep Workspace | awk '{print $3;}'`
+            fi
+
+            # echo "$win_title	$win_workspace	$win_x	$win_y	$win_width	$win_height"
+            echo "$win_title	$win_workspace	$win_x	$win_y	$win_width	$win_height" >> $SAVED_SESSION
+        fi
+    fi
+
+done < /tmp/$$.wnckprop
+
+echo "$SAVED_SESSION Generated"
+
+rm /tmp/$$.wnckprop
+

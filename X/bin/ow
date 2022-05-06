@@ -1,0 +1,27 @@
+OW=/usr/openwin
+OPENWINHOME=/usr/openwin ; export OPENWINHOME
+colon() { echo $* | tr '[ ]' '[:]'; }
+prefix4() {
+	if [ -z "$2" ]; then
+		eval $1="$3$4"
+	else
+		eval $1="$3:$2"
+	fi
+	export $1
+}
+prefix() {
+	if [ $# = 2 ] ; then
+		prefix4 $1 "`eval echo '$'$1`" $2
+	else
+		prefix4 $1 "`eval echo '$'$1`" $2 :$3
+	fi
+}
+prefix LD_LIBRARY_PATH $OW/lib /usr/lib
+prefix MANPATH $OW/man "`colon /sw/*/man`"
+prefix FONTPATH $OW/lib:$OW/lib/fonts /usr/lib/X11/fonts
+prefix PATH "$OW/bin:$OW/bin/xview:OW/demo/xview:$OW/demo/olit" ""
+XAPPLRESDIR=$OW/lib/X11/app-defaults
+export XAPPLRESDIR
+#env | egrep '^(OW|OPENWINHOME|LD_LIBRARY_PATH|MANPATH|FONTPATH|PATH)=' | cat -v
+
+exec $*

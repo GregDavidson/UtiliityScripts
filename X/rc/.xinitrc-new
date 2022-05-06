@@ -1,0 +1,10 @@
+#!/bin/sh
+# J. Greg Davidson
+# Copyright (c) 1992, 1993 Virtual Infinity Systems.  All rights reserved.
+
+${SH_INIT:-. ${sh_lib:-$HOME/lib/sh}/init.sh}
+
+require x11r5tools.sh
+
+xsetroot -solid white
+kbd_mode -a # fixes up Sun workstation keyboard

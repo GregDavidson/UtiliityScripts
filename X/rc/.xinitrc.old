@@ -1,0 +1,30 @@
+#!/bin/sh
+hostname=`hostname`
+DISPLAY=${hostname}:0
+export DISPLAY
+
+xbin=/usr/bin/X11
+wait=10
+if test $hostname = bar ; then wait=15 ; fi
+sleep=0
+sleep_add(){ sleep=`expr $sleep + $1` ; }
+delay(){ (sleep $1 ; shift ; $*) & }
+next(){ delay $sleep $@ ; sleep_add $wait ; }
+xnxt(){ next $xbin/$* ; }
+binx(){ $xbin/$* ; }
+
+binx xrdb -load $HOME/.Xdefaults
+binx xsetroot -gray
+xnxt xterm -vb -ls -bw 2 -geometry 80x18-0-0 -fn 6x10 -C
+sleep $wait
+binx xhost bar vis
+next /local/bin/emacs/emacs -w =81x67+140-0
+xnxt xterm -vb -bw 2 -geometry 80x24-0+0
+xnxt xcalendar -geometry +664+340
+xnxt xclock -geometry 120x120+0+0 -analog
+xnxt xpostit -geometry 120x120+0+150
+xnxt xman -bw 2 -geometry 120x120+0+300
+xnxt xcalc -geometry 120x120+0+450
+binx twm
+binx xsetroot -solid white
+binx kbd_mode -a

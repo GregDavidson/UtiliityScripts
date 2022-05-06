@@ -1,0 +1,4 @@
+:
+# rxterm - create an xterm window for a remote application
+#          handles environment variable propagation
+

@@ -1,0 +1,97 @@
+NoGrabServer
+DecorateTransients
+TitleFont "-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-*-*"
+ResizeFont "-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-*-*"
+MenuFont "-adobe-helvetica-bold-r-normal--*-120-*-*-*-*-*-*"
+IconFont "-adobe-helvetica-bold-r-normal--*-100-*-*-*-*-*-*"
+IconManagerFont "-adobe-helvetica-bold-r-normal--*-100-*-*-*"
+#ClientBorderWidth
+
+AutoRaise
+{
+	"TWM Icon Manager"
+	"xclock"
+	"xeyes"
+}
+
+Monochrome
+{
+	DefaultForeground	"black"
+	DefaultBackground	"white"
+	BorderColor	"black"
+	TitleForeground	"black"
+	TitleBackground	"white"
+	MenuForeground	"black"
+	MenuBackground	"white"
+}
+
+#
+# Define some useful functions for motion-based actions.
+#
+MoveDelta 3
+Function "move-or-lower" { f.move f.deltastop f.lower }
+Function "move-or-raise" { f.move f.deltastop f.raise }
+Function "move-or-iconify" { f.move f.deltastop f.iconify }
+
+#
+# Set some useful bindings.  Sort of uwm-ish, sort of simple-button-ish
+#
+Button1 = : root : f.menu "defops"
+Button2 = : root : f.menu "Hosts_menu"
+Button3 = : root : f.menu "Tools_menu"
+
+Button1 = m : window|icon : f.function "move-or-lower"
+Button2 = m : window|icon : f.iconify
+Button3 = m : window|icon : f.function "move-or-raise"
+
+Button1 = : title : f.function "move-or-raise"
+Button2 = : title : f.raiselower
+
+Button1 = : icon : f.function "move-or-iconify"
+Button2 = : icon : f.iconify
+
+Button1 = : iconmgr : f.iconify
+Button2 = : iconmgr : f.iconify
+
+#
+# And a menus with the usual things
+#
+menu "defops"
+{
+"Twm"	f.title
+"Iconify"	f.iconify
+"Resize"	f.resize
+"Move"		f.move
+"Raise"		f.raise
+"Lower"		f.lower
+""		f.nop
+"Focus"		f.focus
+"Unfocus"	f.unfocus
+"Show Iconmgr"	f.showiconmgr
+"Hide Iconmgr"	f.hideiconmgr
+""		f.nop
+"Kill"		f.destroy
+"Delete"	f.delete
+""		f.nop
+"Restart"	f.restart
+"Exit"		f.quit
+}
+
+menu "Hosts_menu"
+{
+"Host Connections"	f.title
+"vis"	!"rsh -n vis exec /usr/bin/X11/xterm -ls -display $DISPLAY -T vis -n vis&"
+"foo"	!"rsh -n foo exec /usr/bin/X11/xterm -ls -display $DISPLAY -T foo -n foo&"
+"bar"	!"rsh -n bar exec /usr/bin/X11/xterm -ls -display $DISPLAY -T bar -n bar&"
+}
+
+menu "Tools_menu"
+{
+"Tools" f.title
+"Shell" !"/usr/bin/X11/xterm -display $DISPLAY -T Shell -n shell&"
+"Emacs" !"/local//bin/emacs/emacs -display $DISPLAY&"
+"Postits" !"/usr/bin/X11/xpostit -display $DISPLAY -geometry 120x120+0+150 -title Postit_Pad&"
+"Calendar" !"/usr/bin/X11/xcalendar -display $DISPLAY&"
+"Manual Tool" !"/usr/bin/X11/xman -display $DISPLAY -title Unix&"
+"Calculator" !"/usr/bin/X11/xcalc -display $DISPLAY -title Calculator&"
+}

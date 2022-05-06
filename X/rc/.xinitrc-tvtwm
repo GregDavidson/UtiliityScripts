@@ -1,0 +1,62 @@
+#!/bin/sh
+# J. Greg Davidson
+# Copyright (c) 1992, 1993 Virtual Infinity Systems.  All rights reserved.
+
+wm=tvtwm
+
+ if [ -z "$hostname" ] ; then hostname=`hostname`   ; fi
+#if [ -z "$DISPLAY"  ] ; then DISPLAY=${hostname}:0 ; export DISPLAY; fi
+ if [ -z "$DISPLAY"  ] ; then DISPLAY=unix:0        ; export DISPLAY; fi
+
+# add_if_not_in bin_directory...
+# adds first argument to PATH if none of the argumentss is in PATH already
+add_if_not_in() {
+  a=:$1
+  for d in $* ; do
+    for p in "${d}:.*" ".*:${d}:.*" ".*:${d}" ; do
+      if [ `expr $PATH : $p` -ne 0 ] ; then
+	a=""
+      fi
+    done
+  done
+  PATH=$PATH$a
+  export PATH
+}
+
+add_if_not_in /sw/X/bin /usr/bin/X11
+
+#OPENWINHOME=/usr/openwin ; export OPENWINHOME
+#LD_LIBRARY_PATH=/usr/openwin/lib:/usr/lib ; export LD_LIBRARY_PATH
+#add_if_not_in $OPENWINHOME/bin
+#add_if_not_in $OPENWINHOME/bin/xview
+#add_if_not_in $OPENWINHOME/demo
+#add_if_not_in $OPENWINHOME/demo/xview
+
+case $hostname in
+vis) wait=10 ;;
+bar) wait=15 ;;
+*) wait=10 ;;
+esac
+
+sleep=$wait
+sleep_add(){ sleep=`expr $sleep + $1` ; }
+delay(){ (sleep $1 ; shift ; $*) & }
+launch(){ delay $sleep $@ ; sleep_add $wait ; }
+ow_launch(){ launch OPENWINHOME=/usr/openwin LD_LIBRARY_PATH=/usr/openwin/lib:/usr/lib $* ; }
+
+xrdb -load $HOME/.Xdefaults
+xmodmap $HOME/.xmodmaprc
+xsetroot -gray
+xhost +
+launch xterm -ls -geometry 80x18-0-0 -C
+launch /local/bin/emacs/emacs -w =81x67+150-0
+launch xterm -geometry 80x24-0+0
+#launch xcalendar -geometry +664+340
+launch xclock -geometry 120x120+0+0 -analog
+launch xpostit -geometry 120x54+0+240
+launch xman -bw 2 -geometry 120x80+0+300
+launch xcalc -geometry 120x160+0+386
+#ow_launch /usr/openwin/bin/xview/cm -geometry +0+126
+$wm
+xsetroot -solid white
+kbd_mode -a # fixes up Sun workstation keyboard

@@ -1,0 +1,726 @@
+addition to unmapping the window) send a synthetic
+.PN UnmapNotify
+event by
+using a
+.PN SendEvent
+.mc
+request with the following arguments:
+.br
+.ne 6
+.TS
+l lw(3.5i).
+_
+.sp 6p
+.B
+Argument	Value
+.sp 6p
+_
+.sp 6p
+.R
+destination:	The root
+propagate:	T{
+.PN False
+T}
+event-mask:	T{
+.Pn ( SubstructureRedirect|SubstructureNotify )
+T}
+T{
+event: an 
+.PN UnmapNotify
+with:
+T}	T{
+T}
+\h'4n'event:	The root
+\h'4n'window:	The window itself
+\h'4n'from-configure:	T{
+.PN False
+T}
+.sp 6p
+_
+.TE
+.NT Rationale
+.mc |
+The reason for requiring the client to send a synthetic
+.PN UnmapNotify
+event is to ensure that the window manager
+gets some notification of the client's desire to change state,
+even though the window may already be unmapped when the desire is expressed.
+.NE
+.mc
+.NT "Advice to Implementors"
+.mc |
+For compatibility with obsolete clients, 
+window managers should trigger the transition to the Withdrawn state
+on the real 
+.PN UnmapNotify
+rather than waiting for the synthetic one.
+They should also trigger the transition if they receive a synthetic 
+.PN UnmapNotify
+on a window for which they have not yet received a real 
+.PN UnmapNotify .
+.NE
+.LP
+When a client withdraws a window,
+the window manager will then update or remove the WM_STATE
+property as described in section 4.1.3.1.
+Clients that want to re-use a client window (e.g. by mapping it again or
+reparenting it elsewhere) after withdrawing it must wait for the
+withdrawal to be complete before proceeding.  The preferred method for
+doing this is for clients to wait for the window manager to update or
+remove the WM_STATE property.\**
+.FS
+Earlier versions of these conventions prohibited clients from
+reading the WM_STATE property.  Clients operating under the earlier
+conventions used the technique of tracking
+.PN ReparentNotify
+events to wait for the top-level window to be reparented back to the root
+window.  This is still a valid technique; however, it works only for
+reparenting window managers, and the WM_STATE technique is to be preferred.
+.FE
+.mc
+.LP
+If the transition is from the Normal to the Iconic state,
+the client should send a 
+.PN ClientMessage 
+event to the root with:
+.bP
+Window == the window to be iconified
+.bP
+Type\** == the atom WM_CHANGE_STATE
+.FS
+The type field of the 
+.PN ClientMessage 
+event (called the message_type field by Xlib) should not be confused with
+the \*Qcode\*U field of the event itself,
+which will have the value 33 
+.Pn ( ClientMessage ).
+.FE
+.bP
+Format == 32
+.bP
+Data[0] == IconicState
+.NT Rationale
+.mc |
+The format of this 
+.PN ClientMessage 
+event does not match the format of 
+.PN ClientMessages
+in section 4.2.8.
+This is because they are sent by the window manager to clients,
+and this message is sent by clients to the window manager.
+.NE
+.mc
+.LP
+Other values of data[0] are reserved for future extensions to these
+conventions.  The parameters of the 
+.PN SendEvent 
+request should be those described for the synthetic
+.PN UnmapNotify
+event.
+.NT "Advice to Implementors"
+Clients can also select for 
+.PN VisibilityChange
+events on their top-level or icon windows.
+They will then receive a 
+.PN VisibilityNotify (state==FullyObscured)
+event when the window concerned becomes completely
+obscured even though mapped (and thus, perhaps a waste
+of time to update) and a 
+.PN VisibilityNotify (state!=FullyObscured)
+event when it becomes even partly viewable.
+.NE
+.NT "Advice to Implementors"
+.mc |
+When a window makes a transition from the Normal state to either the Iconic
+or to the Withdrawn state, clients should be aware that the window manager
+may make transients for this window inaccessible.  Clients should not rely
+on transient windows being available to the user when the transient owner
+window is not in the Normal state.  When withdrawing a window, clients are
+advised to withdraw transients for the window.
+.NE
+.mc
+.nH 3 "Configuring the Window"
+.LP
+Clients can resize and reposition their top-level windows by using the 
+.PN ConfigureWindow 
+request.
+The attributes of the window that can be altered 
+with this request are as follows:
+.bP
+The [x,y] location of the window's upper left-outer corner
+.bP
+The [width,height] of the inner region of the window (excluding
+borders)
+.bP
+The border width of the window
+.bP
+The window's position in the stack
+.LP
+The coordinate system in which the location is expressed is that of the root
+(irrespective of any reparenting that may have occurred).
+The border width to be used and win_gravity position hint
+to be used are those most recently requested by the client.
+Client configure requests are interpreted by the window manager
+in the same manner as the initial window geometry mapped from
+the Withdrawn state, as described in section 4.1.2.3.
+Clients must be aware that there is no guarantee that the window manager
+will allocate them the requested size or location and must be prepared to
+deal with any size and location.
+If the window manager decides to respond to a 
+.PN ConfigureRequest
+request by:
+.bP
+.mc |
+Not changing the size, location, border width, or stacking order
+of the window at all
+.mc
+.IP
+A client will receive a synthetic 
+.PN ConfigureNotify
+.mc |
+event that describes the (unchanged) geometry of the window.
+The (x,y) coordinates will be in the root coordinate system,
+adjusted for the border width the client requested,
+.mc
+irrespective of any reparenting that has taken place.
+The border_width will be the border width the client requested.
+The client will not receive a real
+.PN ConfigureNotify
+event because no change has actually taken place.
+.bP
+.mc |
+Moving or restacking the window without resizing it or
+changing its border width
+.mc
+.IP
+A client will receive a synthetic 
+.PN ConfigureNotify 
+.mc |
+event following the change that describes the new geometry of the window.
+The event's (x,y) coordinates will be in the root coordinate system adjusted 
+.mc
+for the border width the client requested.
+The border_width will be the border width the client requested.
+The client may not receive a real 
+.PN ConfigureNotify
+event that describes this change because the window manager may have reparented
+the top-level window.
+If the client does receive a real event,
+the synthetic event will follow the real one.
+.bP
+.mc |
+Resizing the window or changing its border width (regardless of whether the
+window was also moved or restacked)
+.mc
+.IP
+A client that has selected for 
+.PN StructureNotify
+.mc |
+events will receive a real
+.mc
+.PN ConfigureNotify
+event.
+Note that the coordinates in this event are relative to the parent,
+which may not be the root if the window has been reparented.
+The coordinates will reflect the actual border width of the window
+(which the window manager may have changed).
+The 
+.PN Translate\%Coordinates
+request can be used to convert the coordinates if required.
+.LP
+The general rule is that coordinates in real 
+.PN ConfigureNotify
+events are in the parent's space; 
+in synthetic events, they are in the root space.
+.NT "Advice to Implementors"
+.mc |
+Clients cannot distinguish between the case where a top-level window is
+resized and moved from the case where the window is resized but not moved,
+since a real
+.PN ConfigureNotify
+event will be received in both cases.  Clients that are concerned with
+keeping track of the absolute position of a top-level window should keep a
+piece of state indicating whether they are certain of its position.  Upon
+receipt of a real
+.PN ConfigureNotify
+event on the top-level window, the client should note that the position is
+unknown.  Upon receipt of a synthetic
+.PN ConfigureNotify
+event, the client should note the position as known, using the position in
+this event.  If the client receives a
+.PN KeyPress ,
+.PN KeyRelease ,
+.PN ButtonPress ,
+.PN ButtonRelease ,
+.PN MotionNotify ,
+.PN EnterNotify ,
+or
+.PN LeaveNotify
+event on the window (or on any descendant), the client can deduce the
+top-level window's position from the difference between the (event-x,
+event-y) and (root-x, root-y) coordinates in these events.  Only when the
+position is unknown does the client need to use the
+.PN Translate\%Coordinates
+request to find the position of a top-level window.
+.NE
+.mc
+.LP
+Clients should be aware that their borders may not be visible.
+Window managers are free to use reparenting techniques to
+decorate client's top-level windows with borders containing
+titles,  controls, and other details to maintain a consistent look-and-feel.
+If they do,
+they are likely to override the client's attempts to set the border width
+and set it to zero.
+Clients, therefore, should not depend on the top-level window's border 
+being visible or use it to display any critical information.
+Other window managers will allow the top-level windows border to
+be visible.
+.NT Convention
+Clients should set the desired value of the border-width attribute on all 
+.PN ConfigureWindow
+requests to avoid a race condition.
+.NE
+.LP
+Clients that change their position in the stack must be aware 
+that they may have been reparented,
+which means that windows that used to be siblings no longer are.
+Using a nonsibling as the sibling parameter on a 
+.PN ConfigureWindow 
+request will cause an error.
+.NT Convention
+Clients that use a
+.PN ConfigureWindow
+request to request a change in their position in the stack 
+should do so using 
+.PN None
+in the sibling field.
+.NE
+.LP
+Clients that must position themselves in the stack relative to some
+window that was originally a sibling must do the 
+.PN ConfigureWindow
+request (in case they are running under a nonreparenting window manager),
+be prepared to deal with a resulting error,
+and then follow with a synthetic 
+.PN ConfigureRequest 
+event by invoking a
+.PN SendEvent
+request with the following arguments:
+.br
+.ne 6
+.TS
+l lw(3.5i).
+_
+.sp 6p
+.B
+Argument	Value
+.sp 6p
+_
+.sp 6p
+.R
+destination:	The root
+propagate:	T{
+.PN False
+T}
+event-mask:	T{
+.Pn ( SubstructureRedirect|SubstructureNotify )
+T}
+T{
+event: a 
+.PN ConfigureRequest 
+with:
+T}	T{
+T}
+\h'4n'event:	The root
+\h'4n'window:	The window itself
+T{
+\h'4n'\&.\^.\^.
+T}	T{
+Other parameters from the
+.PN ConfigureWindow
+request
+T}
+.sp 6p
+_
+.TE
+.LP
+.mc |
+Window managers are in any case free to position windows in the stack as
+they see fit, and so clients should not rely on receiving the stacking
+order they have requested.  Clients should ignore the above-sibling
+field of both real and synthetic
+.PN ConfigureNotify
+events received on their top-level windows because this field may not
+contain useful information.
+.mc
+.nH 3 "Changing Window Attributes"
+.LP
+The attributes that may be supplied when a window is created may be
+changed by using the 
+.PN ChangeWindowAttributes
+request.
+The window attributes are listed in the following table.
+.br
+.ne 6
+.TS H
+l l
+l c.
+_
+.sp 6p
+.B
+Attribute	Private to Client
+.sp 6p
+_
+.sp 6p
+.TH
+.R
+Background pixmap	Yes
+Background pixel	Yes
+Border pixmap	Yes
+Border pixel	Yes
+Bit gravity	Yes
+Window gravity	No
+Backing-store hint	Yes
+Save-under hint	No
+Event mask	No
+Do-not-propagate mask	Yes
+Override-redirect flag	No
+Colormap	Yes
+Cursor	Yes
+.sp 6p
+_
+.TE
+.LP
+Most attributes are private to the client and will never be interfered with
+by the window manager.
+For the attributes that are not private to the client:
+.bP
+The window manager is free to override the window gravity;
+a reparenting window manager may want to set the top-level window's
+window gravity for its own purposes.
+.bP
+Clients are free to set the save-under hint on their top-level windows,
+but they must be aware that the hint may be overridden by the window manager.
+.bP
+Windows, in effect, have per-client event masks,
+and so, clients may select for whatever events are convenient irrespective 
+of any events the window manager is selecting for.
+There are some events for which only one client at a time may select,
+but the window manager should not select for them on any of the client's
+windows.
+.bP
+Clients can set override-redirect on top-level windows but are
+encouraged not to do so except as described in sections 4.1.10 and 4.2.9.
+.nH 3 "Input Focus"
+.LP
+There are four models of input handling:
+.bP
+No Input \- The client never expects keyboard input.
+An example would be 
+.PN xload
+or another output-only client.
+.bP
+Passive Input \- The client expects keyboard input but never explicitly sets 
+the input focus.
+An example would be a simple client with no subwindows,
+which will accept input in 
+.PN PointerRoot
+mode or when the window manager sets the input focus to its top-level window 
+(in click-to-type mode).
+.bP
+Locally Active Input \- The client expects keyboard input and explicitly sets 
+the input focus, 
+but it only does so when one of its windows already has the focus.
+An example would be a client with subwindows defining various data
+entry fields that uses Next and Prev keys to move the input focus
+between the fields.
+It does so when its top-level window has acquired the focus in 
+.PN PointerRoot
+mode or when the window manager sets the input focus to its top-level window 
+(in click-to-type mode).
+.bP
+Globally Active Input \- The client expects keyboard input and explicitly sets 
+the input focus, 
+even when it is in windows the client does not own.
+An example would be a client with a scroll bar that wants to allow
+users to scroll the window without disturbing the input focus even if
+it is in some other window.
+It wants to acquire the input focus when the user clicks in the scrolled
+region but not when the user clicks in the scroll bar itself.
+Thus, it wants to prevent the window manager from setting the input focus 
+to any of its windows.
+.LP
+The four input models and the corresponding values of the input field
+and the presence or absence of the WM_TAKE_FOCUS atom in the
+WM_PROTOCOLS property are listed in the following table:
+.br
+.ne 6
+.TS H
+l l l
+l c c.
+_
+.sp 6p
+.B
+Input Model	Input Field	WM_TAKE_FOCUS
+.sp 6p
+_
+.sp 6p
+.TH
+.R
+T{
+No Input
+T}	T{
+.PN False
+T}	T{
+Absent
+T}
+T{
+Passive
+T}	T{
+.PN True
+T}	T{
+Absent
+T}
+T{
+Locally Active
+T}	T{
+.PN True
+T}	T{
+Present
+T}
+T{
+Globally Active
+T}	T{
+.PN False
+T}	T{
+Present
+T}
+.sp 6p
+_
+.TE
+.LP
+Passive and Locally Active clients set the input field of WM_HINTS to
+.PN True ,
+which indicates that they require window manager assistance  in acquiring the
+input focus.
+No Input and Globally Active clients set the input field to
+.PN False ,
+which requests that the window manager not set the input focus 
+to their top-level window.
+.LP
+Clients that use a
+.PN SetInputFocus
+request must set the time field to the timestamp of the event 
+that caused them to make the attempt.
+This cannot be a 
+.PN FocusIn
+event because they do not have timestamps.
+Clients may also acquire 
+the focus without a corresponding 
+.PN EnterNotify .
+Note that clients must not use 
+.PN CurrentTime 
+in the time field.
+.LP
+Clients using the Globally Active model can only use a
+.PN SetInputFocus
+request to acquire the input focus when they do not already have it on
+receipt of one of the following events:
+.bP
+.PN ButtonPress
+.bP
+.PN ButtonRelease
+.bP
+Passive-grabbed 
+.PN KeyPress
+.bP
+Passive-grabbed
+.PN KeyRelease
+.LP
+In general,
+clients should avoid using passive-grabbed key events for this purpose,
+except when they are unavoidable (as, for example, a selection tool 
+that establishes a passive grab on the keys that cut,  copy,  or paste).
+.LP
+The method by which the user commands the window manager to
+set the focus to a window is up to the window manager.
+For example, 
+clients cannot determine whether they will see the click 
+that transfers the focus.
+.LP
+Windows with the atom WM_TAKE_FOCUS in their WM_PROTOCOLS property
+may receive a 
+.PN ClientMessage 
+event from the window manager (as described in section 4.2.8)
+with WM_TAKE_FOCUS in their data[0] field.
+If they want the focus,
+they should respond with a 
+.PN SetInputFocus
+request with its window field set to the window of theirs 
+that last had the input focus or to their \*Qdefault input window,\*U
+and the time field set to the timestamp in the message.
+For further information,
+see section 4.2.7.
+.LP
+A client could receive WM_TAKE_FOCUS when opening from an icon
+or when the user has clicked outside the top-level window in an area that
+indicates to the window manager that it should assign the focus 
+(for example, clicking in the headline bar can be used to assign the focus).
+.LP
+The goal is to support window managers that want to assign the input focus
+to a top-level window in such a way that the top-level window either
+can assign it to one of its subwindows or can decline the offer of the focus.
+For example, a clock or a text editor with no currently open frames 
+might not want to take focus even though the window manager generally 
+believes that clients should take the input focus after being deiconified 
+or raised.
+.mc *
+.mc
+.LP
+Clients that set the input focus need to decide a value for the
+revert-to field of the 
+.PN SetInputFocus
+request.
+This determines the behavior of the input focus 
+if the window the focus has been set to becomes not viewable.
+The value can be any of the following:
+.bP
+.PN Parent
+\- In general, 
+clients should use this value when assigning focus to one of their subwindows.
+Unmapping the subwindow will cause focus to revert to the parent,
+which is probably what you want.
+.bP
+.PN PointerRoot 
+\- Using
+this value with a click-to-type focus management policy
+leads to race conditions because the window becoming unviewable may
+coincide with the window manager deciding to move the focus elsewhere.
+.bP
+.PN None 
+\- Using
+this value causes problems if the window manager reparents 
+the window, as most window managers will, and then crashes.
+The input focus will be 
+.PN None , 
+and there will probably be no way to change it.
+.KE
+.LP
+Note that neither
+.PN PointerRoot
+nor
+.PN None
+is really safe to use.
+.NT Convention
+Clients that invoke a
+.PN SetInputFocus 
+request should set the revert-to argument to 
+.PN Parent .
+.NE
+.LP
+A convention is also required for clients that want to give up the
+input focus.
+There is no safe value set for them to set the input focus to;
+therefore, they should ignore input material.
+.NT Convention
+Clients should not give up the input focus of their own volition.
+They should ignore input that they receive instead.
+.NE
+.nH 3 "Colormaps"
+.mc |
+.LP
+The window manager is responsible for installing and uninstalling 
+colormaps on behalf of clients with top-level windows that
+the window manager manages.
+.LP
+Clients provide the window manager with hints as to which colormaps to
+install and uninstall.  Clients must not install or uninstall colormaps
+themselves (except under the circumstances noted below).  When a client's
+top-level window gets the colormap focus (as a result of whatever colormap
+focus policy is implemented by the window manager), the window manager will
+ensure that one or more of the client's colormaps are installed.
+.LP
+Clients whose top-level windows and subwindows all use the same colormap
+should set its ID in the colormap field of the top-level window's
+attributes.  They should not set a WM_COLORMAP_WINDOWS property on the
+top-level window.  If they want to change the colormap, they should change
+the top-level window's colormap attribute.  The window manager will track
+changes to the window's colormap attribute and install colormaps as
+appropriate.
+.LP
+Clients that create windows can use the value 
+.PN CopyFrom\%Parent
+to inherit their parent's colormap.  Window managers will ensure that the
+root window's colormap field contains a colormap that is suitable for
+clients to inherit.  In particular, the colormap will provide
+distinguishable colors for
+.PN BlackPixel 
+and 
+.PN WhitePixel .
+.LP
+Top-level windows that have subwindows or override-redirect pop-up windows
+whose colormap requirements differ from the top-level window should have a
+WM_COLORMAP_WINDOWS property.  This property contains a list of IDs for
+windows whose colormaps the window manager should attempt to have installed
+when, in the course of its individual colormap focus policy, it assigns the
+colormap focus to the top-level window (see section 4.1.2.8).  The list is
+ordered by the importance to the client of having the colormaps installed.
+The window manager will track changes to this property and will track
+changes to the colormap attribute of the windows in the property.
+.LP
+If the relative importance of colormaps changes, the client should update
+the WM_COLORMAP_WINDOWS property to reflect the new ordering.  If the
+top-level window does not appear in the list, the window manager will assume
+it to be of higher priority than any window in the list.
+.LP
+WM_TRANSIENT_FOR windows either can have their own WM_COLORMAP_WINDOWS
+property or can appear in the property of the window they are transient for,
+as appropriate.
+.mc
+.NT Rationale
+.mc |
+An alternative design was considered for how clients should hint to the
+window manager about their colormap requirements.  This alternative design
+specified a list of colormaps instead of a list of windows.  The current
+design, a list of windows, was chosen for two reasons.  First, it allows
+window managers to find the visuals of the colormaps, thus permitting
+visual-dependent colormap installation policies.  Second, it allows window
+managers to select for
+.PN Visibility\%Change
+events on the windows concerned and to ensure that colormaps are only
+installed if the windows that need them are visible.  The alternative design
+allows for neither of these policies.
+.mc
+.NE
+.NT "Advice to Implementors"
+.mc |
+Clients should be aware of the min-installed-maps and max-installed-maps
+fields of the connection setup information, and the effect that the minimum
+value has on the \*Qrequired list\*U defined by the Protocol in the
+description of the
+.PN Install\%Colormap
+request.  Briefly, the min-installed-maps most recently installed maps are
+guaranteed to be installed.  This value is often one; clients needing
+multiple colormaps should beware.
+.mc
+.NE
+.LP
+.mc |
+Whenever possible, clients should use the mechanisms described above and let
+the window manager handle colormap installation.  However, clients are
+permitted to perform colormap installation on their own while they have the
+pointer grabbed.  A client performing colormap installation must notify the
+window manager prior to the first installation.  When the client has
+finished its colormap installation, it must also notify the window manager.
+The client notifies the window manager by issuing a
+.PN Send\%Event
+request with the following arguments:
+.br
+.mc
+.LP
+.ne 6
+.TS
+tab(/) ;
+lB lB
+l lw(3.5i)

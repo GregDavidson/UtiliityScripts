@@ -1,0 +1,11 @@
+keysym F21 = aacute Aacute
+keysym F24 = agrave Agrave
+keysym F27 = ccedilla Ccedilla
+keysym F22 = eacute Eacute
+keysym F25 = egrave Egrave
+keysym F23 = oacute Oacute
+keysym F26 = ograve Ograve
+keysym F33 = guillemotleft
+keysym F35 = guillemotright
+keysym BackSpace = Delete
+
