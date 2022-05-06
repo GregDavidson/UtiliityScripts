@@ -1,0 +1,17 @@
+@include tcl-text-html
+title Have a Wonderful Life
+body {onload="foobar"}
+* Have a Wonderful Life
+** Have a great childhood
+- Choose your -family- well
+-- Your mother and father
+-- Your siblings
+--- Your birth order matters
+--- So do genders and timing
+-- Don't forget to control for everything else
+** Have a great adult life
+- You are probably _screwed_up_
+-- You could -fix-yourself-
+-- =Transformation= works better
+- Love +everybody+
+-- include +yourself+!

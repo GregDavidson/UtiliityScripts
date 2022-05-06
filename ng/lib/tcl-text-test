@@ -1,0 +1,8 @@
+tcl-text-test
+* a level 1 title
+** a level 2 title
+- a level 1 bullet
+-- a level 2 bullet
+something +in+bold+ -in-italics- a =keyword= and _underlined_
+@include tcl-text-test-A
+@magic this that

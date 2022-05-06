@@ -1,0 +1,452 @@
+#!/usr/bin/tclsh
+
+# tcl-text - expand tcl-text into desired output format
+# Copyright (c) J. Greg Davidson
+# Sunday, 25 January 2004
+
+# tcl-text is regular text with some embedded processing directives
+# tcl-text directives are either
+#	the first word on a line/record
+#	the first word within $LT and $RT pairs
+#	a special built-in pattern
+
+# 
+
+# To do: eval magic procs in a sandbox
+
+set File(Lib) /home/greg/SW/ng/lib
+set File(StdinRepeat) 0
+set File(Name) {}
+set File(Line) {}
+
+set Str(LT) {[}
+set Str(RT) {]}
+set Str(altLT) {(:}
+set Str(altRT) {:)}
+set Str(back-slash) \\
+set Str(double-back-slash) \\\\
+
+set Pat(LT) {\[}
+set Pat(RT) {\]}
+set Pat(altLT) {\(:}
+set Pat(altRT) {:\)}
+set Pat(LT-RT) {\[[^\]]*\]}
+set Pat(Space) {[[:space:]]}
+set Pat(Break) {[\],:;!?.[:space:]]}
+set Pat(FirstRest) {([^[:space:]]*)[[:space:]]*(.*)}
+
+set MagicClass(-magic-class-eof-) -1
+set MagicClass(@html) 0
+set MagicClass(@html-close) 0
+set MagicClass(@body) 1
+set MagicClass(@body-close) 1
+set MagicClass(@script) 1
+set MagicClass(@style) 1
+set MagicClass(@title) 1
+set MagicClass(@body) 1
+set MagicClass(@head) 2
+set MagicClass(@h) 100
+set MagicClass(@para-close) 150
+set MagicClass(@para) 150
+set MagicClass(-magic-class-none-) 200
+set MagicClass(@ul-close) 300
+set MagicClass(@li) 300
+# Should really make embedded stuff be on a different scale
+# or not allow them close magic at all; but in the meantime:
+set MagicClass(@xml-wrap) 1000
+
+
+set Finalizations [list]
+
+set Indent 0
+proc @indent new_indent {
+  global Indent
+  set Indent $new_indent
+}
+
+# all output to stdout should be done using putstr
+proc putstr str {
+  global Str Pat
+  regsub -all -- $Pat(altLT) $str $Str(LT) str
+  regsub -all -- $Pat(altRT) $str $Str(RT) str
+  regsub -all -- $Str(double-back-slash) $str $Str(back-slash) str
+  set indent [magic-stack-size]
+  for {set i 1} {$i < $indent} {incr i} {
+    puts -nonewline "\t"
+  }
+  puts -nonewline stdout $str
+}
+
+proc report {level args} {
+  global File argv0
+  puts stderr "$argv0 $level, file $File(Name), line $File(Line): $args"
+}
+
+proc is-magic {word {var {}}} {
+# There is a much simpler way to write this!
+  global MagicWords
+  if {[info exists MagicWords($word)]} {
+    if {[string length $var]} {
+      upvar $var magic
+      set magic $MagicWords($word)
+    }
+    return 1;
+  }
+  return 0;
+}
+
+set MagicWords(@include) @include
+proc @include item {
+  process-file $item
+  return {}
+}
+
+# Putting @magic in the MagicWords table is not currently necessary
+# as @magic records are handled specially in process-string
+# so as to avoid substitutions
+proc @magic {word0 rest}  {
+  global MagicWords Pat
+  if {![string length $rest]} {
+    set rest "@$word0"
+  }
+  if {[is-magic $word0]} {
+    report warning magic word $word0 redefined
+  }
+  set MagicWords($word0) $rest
+  return {}
+}
+
+proc open-close-magic {proc level str open close} {
+#  puts stderr "open-close-magic proc: $proc, level: $level, str: $str, open: $open, close: $close"
+#  gets stdin
+  if {[string equal $str close]} {
+    putstr "$close\n"
+  } elseif { ![magic-stack-top-matches [list $proc $level]] } {
+    magic-stack-push [list $proc $level]
+    putstr "$open\n"
+  }
+  return {}
+}
+
+## begin xml and html magic
+
+proc @html-close {str {level 0}} {
+  putstr "</html>\n"
+}
+
+proc @html {str {level 0}} {
+#  puts stderr "@html str: $str, level: $level"
+  set doctype {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">}
+  open-close-magic @html-close 0 $str "$doctype\n<html>" "</html>"
+}
+
+proc @head {str {level 2}} {
+#  puts stderr "@head str: $str, level: $level"
+  putstr "</head>\n"
+}
+
+proc @meta {str} {
+  open-close-magic @head 2 $str "<head>" {}
+  putstr "<meta $str> </meta>\n"
+}
+
+proc @script {str} {
+  open-close-magic @head 2 $str "<head>" {}
+  putstr  "<script src=\"/ngender/include/index.js\" type=\"text/javascript\"> </script>\n"
+}
+
+proc @style {str} {
+  open-close-magic @head 2 $str "<head>" {}
+  putstr "<link rel=\"stylesheet\" type=\"text/css\" href=\"$str\"> </link>\n"
+}
+
+proc @instructor-style {str} {
+  open-close-magic @head 2 $str "<head>" {}
+  putstr "<link rel=\"alternate stylesheet\" title=\"instructor\" type=\"text/css\" href=\"$str\"> </link>\n"
+}
+
+proc @title {str} {
+  open-close-magic @head 2 $str "<head>" {}
+  putstr "<title> $str </title>\n"
+}
+
+proc @body-close {str {level 0}} {
+  puts {
+    <hr>
+      <address>Copyright &copy; 2004 <a href="mailto:partners nospam-at-nospam ngender.net">J. Greg Davidson</a></address>
+      <!-- Created: Friday 30 January 2004 -->
+      <!-- hhmts start -->
+    Last modified: Tue Feb  3 21:44:28 PST 2004
+    <!-- hhmts end -->
+  </body>
+  }
+}
+
+proc @body {str {level 1}} {
+  open-close-magic @body-close 1 $str "<body $str>" "</body>"
+}
+
+proc @h {level str}  {
+  open-close-magic @h $level $str "<div class=\"L$level\">" "</div>"
+  return "<hr><h${level}>$str</h${level}>\n"
+}
+
+proc @para-close {level str} {
+  putstr "</p>\n"
+}
+
+proc @para {str} {
+  open-close-magic @para-close 150 $str {<p class="instructor">} {</p>}
+  return "$str\n"
+}
+
+proc @ul-close {str {level 0}} {
+  putstr "</ul>\n"
+}
+
+proc @li {level style str} {
+#  puts stderr "@li level: $level, style: $style, str: $str"
+  if {[string equal $style nobullet]} {
+    set inlinestyle { style="list-style-type: none;"}
+  } else {
+    set inlinestyle {}
+  }
+  open-close-magic @ul-close $level $str "<ul class=\"L$level\"$inlinestyle>" "</ul>"
+  return "<li class=\"$style\">${str}</li>\n"
+}
+
+proc @xml-wrap {style str} {
+#  puts stderr "@xml-wrap style: $style, str: $str"
+  return "<$style>$str</[lindex $style 0]>"
+}
+
+## end xml and html magic
+
+## begin roff magic
+proc @section {level str} { return ".sh ${level} \"${str}\"\n" }
+proc @roff-font {style str} {return "\\f$style$str\\fR"}
+proc @roff-ul {str} {return "\n.ul\n$str\n"}
+
+## end roff magic
+
+proc apply-magic {magic s} {
+  eval "$magic {$s}"
+}
+
+proc apply-close-magic {{new_magic {}}} {
+#  puts stderr "apply-close-magic top2: [magic-stack-top2], new_magic: $new_magic"
+  while {[magic-stack-size] && [magic-stack-top-subordinate-to $new_magic]} {
+      apply-magic [magic-stack-pop] close
+  }
+}
+
+set MagicStack(tos) 0
+proc magic-stack-size {} {
+  global MagicStack
+  return $MagicStack(tos)
+}
+
+proc magic-stack-push {new_magic} {
+  global MagicStack
+#  puts stderr "magic-stack-push: {$new_magic}"
+  set MagicStack($MagicStack(tos)) $new_magic
+  incr MagicStack(tos)
+}
+
+proc magic-stack-top {} {
+  global MagicStack
+  set tos $MagicStack(tos)
+  if {$tos == 0} {
+    report Error "magic-stack empty!"
+    return
+  }
+  incr tos -1
+  return $MagicStack($tos)
+}
+
+proc magic-stack-top2 {} {
+  global MagicStack
+  set tos $MagicStack(tos)
+  if {$tos == 0} {
+    return -stack-empty-
+  }
+  incr tos -1
+  return $MagicStack($tos)
+}
+
+proc magic-stack-pop {} {
+  global MagicStack
+#  puts stderr "magic-stack-pop: {[magic-stack-top2]}"
+  set top [magic-stack-top]
+  incr MagicStack(tos) -1
+  return $top
+}
+
+proc magic-stack-top-subordinate-to {new_magic} {
+  global MagicStack
+  if {$MagicStack(tos) == 0} {
+    return 0
+  }
+  magic-subordinate-to [magic-stack-top] $new_magic
+}
+
+proc magic-stack-top-matches {new_magic} {
+#  puts stderr "magic-stack-top-matches: {[magic-stack-top2]} {$new_magic}"
+  expr {[magic-stack-size] && [string equal [magic-stack-top] $new_magic]}
+}
+
+# Larger numbers are subordinate to smaller - think nesting levels
+proc magic-class magic {
+  global MagicClass
+  set word [lindex $magic 0]
+  if {[info exists MagicClass($word)]} {
+    return $MagicClass($word)
+  }
+  return $MagicClass(-magic-class-none-)
+}
+
+proc magic-subordinate-to {old new} {
+  set old_class [magic-class $old]
+  set new_class [magic-class $new]
+  if {$old_class > $new_class} { return 1; }
+  if {$old_class < $new_class} { return 0; }
+  if {[llength $old] < 2 || [llength $new] < 2} {
+    return 0
+  }
+  expr {[lindex $old 1] > [lindex $new 1]}
+}
+
+proc process-string {s} {
+#  puts stderr "process-string: $s"
+  global MagicWords Str Pat
+  if {[regexp -- "^@magic$Pat(Space)*$Pat(FirstRest)\n\$" $s all_s word0 rest]} {
+    return [@magic $word0 $rest]
+  }
+  if { (
+	[regexp -- "^$Pat(LT)$Pat(FirstRest)$Pat(RT)\$" $s all_s word0 rest] ||
+	[regexp -- "^$Pat(FirstRest)\$" $s all_s word0 rest]
+	) && [is-magic $word0 magic]
+     } {
+    set s $rest
+  } elseif {[regexp -- "^(\\*\\**)$Pat(Space)*(.*)" $s all_s stars rest]} {
+    set s $rest
+    set magic "@h [string length $stars]"
+  } elseif {[regexp -- "^(--*)$Pat(Space)*(.*)" $s all_s dashes rest]} {
+    set s $rest
+    set magic "@li [string length $dashes] bullet"
+  } elseif {[regexp -- "^(\\+\\+*)$Pat(Space)*(.*)" $s all_s pluses rest]} {
+    set s $rest
+    set magic "@li [string length $pluses] nobullet"
+  }
+#  if {!([info exists magic] && [string index $magic 0] == "@")} {
+    set s [expand-special-magic "$s"]
+#  }
+  while {[regexp -- "^(.*)($Pat(LT-RT))(.*)\$" $s all_s pre sub post]} {
+    set s "$pre[process-string $sub]$post"
+  }
+  if {[info exists magic]} {
+    apply-close-magic $magic
+    apply-magic $magic [string trim $s]
+  } elseif {[regexp -- "^$Pat(LT)(.*)$Pat(RT)\$" $s all_s inside_s]} {
+    return "$Str(altLT)$inside_s$Str(altRT)"
+  } else {
+    apply-close-magic -magic-class-none-
+    return $s
+  }
+}
+
+#to do: have multi-line constructs read in correctly
+proc process-stream stream {
+  for {global File} {[gets $stream line] >= 0} {incr File(Line)} {
+    putstr [process-string "$line\n"]
+  }
+}
+
+proc expand-special-magic s {
+  global SpecialMagic Pat
+  set s " $s ";				# add space in front and back
+  foreach {pattern expander} $SpecialMagic {
+    while {
+	[regexp -- "^(.*$Pat(Space))($pattern)($Pat(Break).*)\$"  $s all_s pre special post] ||
+	[regexp -- "^(.*$Pat(Space))($pattern)()\$"  $s all_s pre special post]
+	 } {
+#      puts stderr "expand-special-magic pre: $pre special: $special expander: $expander post: $post"
+      set s "$pre[eval "$expander {$special}"]$post"
+    }
+  }
+  if {![regexp -- {^ (.*) $} $s s_all s]} {	# strip the spaces back off
+    report error expand-special-magic bug
+  }
+  return $s
+}
+
+set SpecialMagic {
+  {\*[^[:space:]]*\*} {special-word {\*} em}
+  {\+[^[:space:]]*\+} {special-word {\+} b}
+  {-[^[:space:]]*-} {special-word - i}
+  {_[^[:space:]]*_} {special-word _ underline}
+  {=[^[:space:]]*=} {special-word = kw}
+  {[\^][^[:space:]]*[\^]} {special-word {\^} fixed}
+}
+
+proc special-word {regexp magic word} {
+  if {![regsub -all -- $regexp $word { } s]} {
+    report error special-word bug
+  }
+  return "\[$magic [string trim $s]\]"
+}
+
+proc process-file filename {
+  global File
+  set OldFileName $File(Name)
+  set File(Name) $filename
+  set OldLineNumber $File(Line)
+  set File(Line) 1
+  if {[catch {open $File(Name)} stream] &&
+    [catch {open [file join $File(Lib) $File(Name)]} stream]} {
+    report error "can't open file: $filename"
+  } elseif {[catch {process-stream $stream} value]} {
+    report error $value
+  }
+  set File(Name) $OldFileName
+  set File(Line) $OldLineNumber
+}
+
+proc process-stdin {} {
+  global File
+  set File(Name) {Standard Input}
+  if {$File(StdinRepeat)} {
+    append File(Name) " $File(StdinRepeat)"
+  }
+  set File(Line) 0
+  if {[catch {process-stream stdin} value]} {
+    report error $value
+  }
+  incr File(StdinRepeat)
+}
+
+if {[llength $argv]} {
+  foreach file $argv {
+    if {[string equal $file -]} {
+      process-stream-stdin
+    } else {
+      process-file $file
+    }
+  }
+} else {
+  process-stream-stdin
+}
+
+apply-close-magic -magic-class-eof-
+
+set i [llength $Finalizations]
+while {$i > 0} {
+  incr i -1
+  eval [lindex Finalizations $i]
+}
+
+#  puts stderr {}
+#  puts stderr "The Magic Words are:\n"
+#  foreach {word value} [array get MagicWords] {
+#    puts stderr "\t$word -> $value"
+#  }

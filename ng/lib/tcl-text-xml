@@ -1,0 +1,11 @@
+@magic b @xml_wrap bold
+@magic i @xml_wrap italics
+@magic kw @xml_wrap {em class="keyword"}
+@magic underline @xml_wrap underline
+@magic * @h 1
+@magic ** @h 2
+@magic *** @h 3
+@magic **** @h 4
+@magic ***** @h 5
+@magic - @li 1
+@magic -- @li 2

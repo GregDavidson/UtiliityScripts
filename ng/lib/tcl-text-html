@@ -1,0 +1,14 @@
+@magic b @xml-wrap b
+@magic i @xml-wrap i
+@magic kw @xml-wrap {em class="keyword"}
+@magic fixed @xml-wrap {em class="fixed"}
+@magic underline @xml-wrap underline
+@magic html
+@magic meta
+@magic script
+@magic style
+@magic instructor-style
+@magic title
+@magic body
+@magic : @para
+html

@@ -1,0 +1,36 @@
+One of the quandaries is how to deal with the enclosing structure which xml needs.
+
+Method: hooks
+ * foo
+ ** bar
+ - this
+ -- stuff
+ -- nonsense
+ - that
+ ** baz
+ * next
+
+ [section 1 foo]
+ [inside section 1]
+ [outside section 2]
+ [section 2 bar]
+ [inside section 2]
+ [outside bullet 1]
+ [bullet 1 this]
+ [inside bullet 1]
+ [outside bullet 2]
+ [bullet 2 stuff]
+ [bullet 2 nonsense]
+ [close outside bullet 2]
+ [close inside bullet 1
+ [bullet 1 that]
+ [close outside bullet 1]
+ [close inside section 2]
+ [section 2 baz]
+ [close outside section 2]
+-etc.
+
+Method: stack
+Push current type of section on a stack
+if it's not already on TOS.  Pop it off and
+call it's closer when it's no longer current.

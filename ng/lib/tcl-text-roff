@@ -1,0 +1,10 @@
+@magic * @section 1
+@magic ** @section 2
+@magic *** @section 3
+@magic **** @section 4
+@magic ***** @section 5
+@magic ****** @section 6
+@magic b @roff_font B
+@magic i @roff_font I
+@magic em @roff_font I
+@magic underline @roff_ul
