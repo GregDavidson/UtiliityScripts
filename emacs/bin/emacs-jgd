@@ -1,0 +1,84 @@
+#!/bin/bash
+
+## configure launcher-common
+
+launch=emacs
+declare -Ar option_arity=(			# 1=flag, 2=key+value
+	[batch]=1 [chdir]=2 [daemon]=1 [debug-init]=1 [display]=2
+	[no-desktop]=1 [no-init-file]=1 [no-shared-memory]=1
+	[no-site-file]=1 [no-site-lisp]=1 [no-splash]=1
+	[no-window-system]=1 [script]=2 [terminal]=2 [user]=2
+	[directory]=2 [eval]=2 [execute]=2 [file]=2 [find-file]=2
+	[funcall]=2 [insert]=2 [kill]=1 [load]=2 [visit]=2
+	[background-color]=2 [basic-display]=1 [border-color]=2
+	[border-width]=2 [color]=2 [cursor-color]=2 [font]=2
+	[foreground-color]=2 [fullheight]=1 [fullscreen]=1
+	[fullwidth]=1 [maximized]=1 [geometry]=2
+	[no-bitmap-icon]=1 [iconic]=1 [internal-border]=2
+	[line-spacing]=2 [mouse-color]=2 [name]=2
+	[no-blinking-cursor]=1 [reverse-video]=1 [title]=2
+	[vertical-scroll-bars]=1 [xrm]=2 [parent-id]=2
+)
+# to_add_eval will be eval'ed after add_eval's dependencies are defined
+to_add_eval='add_eval() { add_option eval "$(list_of $@)"; }'
+. emacs-launcher-common.bash
+
+## files, fonts
+
+add_file() { add_arg "$1"; }
+add_files() { while $#; do add_file "$1"; shift; 	done; }
+
+add_font() { add_option font "$1"; }
+
+## fullness, geometry
+
+add_fullness() {
+	case "$1" in
+		-fh|--fullheight)
+			specify height fullheight &&
+				add_option fullheight ;;
+		-fw|--fullwidth)
+			specify width fullwidth &&
+				add_option fullwidth &&
+				"${mode[jgd]}" &&
+				add_eval jgd-split-window "$num_cols" ;;
+		-fs|--fullscreen)
+			specify both fullscreen &&
+				add_option fullscreen &&
+				"${mode[jgd]}" &&
+				add_eval jgd-split-window "$num_cols" ;;
+		*) warning ignoring unknown option "$1" ;;
+	esac
+}
+
+add_geometry() {
+	get_geometry "$1" &&
+	add_option geometry "$1"
+}
+
+## process command arguments
+
+# now process command line options and arguments
+while (( $# )); do
+	case "$1" in
+		--) shift; add_files "$@"; break ;;
+		-fn|--font) shift; replace_option font "$1"	;;
+		-g) shift; add_geometry "$1" ;;
+		-fw|-fh|-fs|--full*|--geo*) add_geometry "$1"	;;
+		--[!-]*) add_option "$1" ;;
+		-[!-]*) set_mode "$1" ;;
+		*) add_arg "$1" ;;
+	esac ; shift
+done
+
+## emacs tweaks, launch
+
+# if no font specified, provide a default
+[[ -z "$font_size" ]] || [[ -n "${options_keys[font]}" ]] ||
+	add_font "DejaVu Sans Semi-Condensed $font_size"
+#	"Dejavu Sans-$font_size:widthtype=condensed"
+
+# if no file specified, use current directory
+(( ${#args[@]} )) || add_file "."
+
+launch_command

@@ -1,0 +1,50 @@
+
+
+
+			  EMACS Outline Mode
+
+
+      Summary:
+
+      Set major mode for editing outlines with selective display.
+      Heading lines start with asterisks: one for each level.
+      Lines not starting with asterisks are body lines. 
+
+      Body text or subheadings can be made temporarily invisible.
+      Invisible lines move with the heading.
+      A heading with hidden text is marked with an ellipsis (...).
+
+
+      Commands:
+
+      C-c C-n  outline-next-visible-heading     move by visible headings
+      C-c C-p  outline-previous-visible-heading
+      C-c C-f  outline-forward-same-level       similar but skip subheadings
+      C-c C-b  outline-backward-same-level
+      C-c C-u  outline-up-heading		move from subheading to heading
+
+      Meta-x hide-body		make all text invisible (not headings).
+      Meta-x show-all		make everything in buffer visible.
+
+      The remaining commands are used when point is on a heading line.
+      They apply to some of the body or subheadings of that heading.
+
+      C-c C-h   hide-subtree	make body and subheadings invisible.
+      C-c C-s   show-subtree	make body and subheadings visible.
+      C-c C-i   show-children	make direct subheadings visible.
+
+	  No effect on body, or subheadings 2 or more levels down.
+	  With arg N, affects subheadings N levels down.
+
+      M-x hide-entry	 make immediately following body invisible.
+      M-x show-entry	 make it visible.
+      M-x hide-leaves	 make deeper bodies invisible.
+			 The subheadings remain visible.
+      M-x show-branches  make all subheadings at all levels visible.
+
+      The variable outline-regexp can be changed to control what is a heading.
+      A line is a heading if outline-regexp matches something at the
+      beginning of the line.  The longer the match, the deeper the level.
+
+      Turning on outline mode calls the value of text-mode-hook and then of
+      outline-mode-hook, if they are non-nil.

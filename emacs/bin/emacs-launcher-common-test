@@ -1,0 +1,261 @@
+#!/bin/bash
+
+## emacs-launcher-common-test
+# Copyright (c) 2014 J. Greg Davidson
+
+# The ## prefixed headers correspond to
+# tests for sections of code in the three scripts
+launch_common='emacs-launcher-common.bash'
+launch_emacs='emacs+jgd'
+launch_emacsclient='emacsclient+jgd'
+
+# This test script is not yet complete
+# or thorough.  See the bottom of the
+# script for empty headers indicating
+# entire untested sections!
+
+# Define Test Functions
+
+test_stdout() {
+	local expected="$1" ; shift
+	local result=$("$@" 2>/dev/null)
+	[[ X"$expected" == X"$result" ]] || {
+		err_level command "$@"
+		err_level expected "$expected"
+		err_level result "$result"
+		error 1 stdout result != expected
+	}
+}
+
+test_stderr() {
+	local expected="$1" ; shift
+	local result=$("$@" 2>&1 >/dev/null)
+	[[ X"$expected" == X"$result" ]] || {
+		err_level command "$@"
+		err_level expected "$expected"
+		err_level result "$result"
+		error 1 stderr result != expected
+	}
+}
+
+test_return() {
+	local expected="$1" ; shift
+	"$@" 2>&1 >/dev/null
+	local result="$?"
+	[[ X"$expected" == X"$result" ]] || {
+		err_level command "$@"
+		err_level expected "$expected"
+		err_level result "$result"
+		error 1 return result != expected
+	}
+}
+
+test_exp() {
+	local expression="$1" expected="$2"	result="$3"
+	[[ X"$expected" == X"$result" ]] || {
+		err_level expression "$expression"
+		err_level expected "$expected"
+		err_level result "$result"
+		return 1
+	}
+}
+
+if (( ! $# )); then
+	
+# source emacs launcher w/o GUI
+
+save_DISPLAY="$DISPLAY"
+DISPLAY=
+
+. "$launch_emacs" -test
+
+### launch_common features
+
+## Errors, Warnings, Standard Error Stream
+
+test_stderr "hello to standard error" \
+						err_out hello to standard error
+test_stderr "$pgm_name warning: be carefull" \
+						warning be carefull
+
+
+## Launcher Modes
+
+test_exp mode[exec] true "${mode[exec]}" || exit 1
+test_exp mode[gui-bg] false "${mode[gui-bg]}" || exit 1
+test_exp mode[show] true "${mode[show]}" || exit 1
+test_exp mode[test] true "${mode[test]}" || exit 1
+test_exp mode[jgd] true "${mode[jgd]}" || exit 1
+
+set_mode -gui-bg
+test_exp mode[exec] false "${mode[exec]}" || exit 1
+test_exp mode[gui-bg] true "${mode[gui-bg]}" || exit 1
+set_mode -exec
+test_exp mode[exec] true "${mode[exec]}" || exit 1
+test_exp mode[gui-bg] false "${mode[gui-bg]}" || exit 1
+
+## Options
+
+encode_option key
+test_exp the_key key "$the_key" &&
+test_exp the_val '' "$the_val" &&
+test_exp the_option --key "$the_option" ||
+error 1 after encode_option key
+
+encode_option key val
+test_exp the_key key "$the_key" &&
+test_exp the_val val "$the_val" &&
+test_exp the_option --key=val "$the_option" ||
+error 1 after encode_option key val
+
+decode_option --key
+test_exp the_key key "$the_key" &&
+test_exp the_val '' "$the_val" &&
+test_exp the_option --key "$the_option" ||
+error 1 after decode_option --key
+
+decode_option --key=val
+test_exp the_key key "$the_key" &&
+test_exp the_val val "$the_val" &&
+test_exp the_option --key=val "$the_option" ||
+error 1 after decode_option --key=val
+
+test_return 1 get_option --key
+test_exp the_key key "$the_key" &&
+test_exp the_val '' "$the_val" &&
+test_exp the_option --key "$the_option" ||
+error 1 after get_option --key
+
+test_return 1 get_option --key=val
+test_exp the_key key "$the_key" &&
+test_exp the_val val "$the_val" &&
+test_exp the_option --key=val "$the_option" ||
+error 1 after get_option --key=val
+
+let n=${#options[@]} nn=n+1
+add_option batch
+test_exp '${#options[@]}' $nn ${#options[@]} &&
+test_exp '${options[$n]}' --batch "${options[$n]}" &&
+test_exp '${options_keys[batch]}' $n "${options_keys[batch]}" &&
+test_exp '${options_vals[--batch]}' $n "${options_vals[--batch]}" ||
+error 1 after add_option batch
+
+let n=${#options[@]} nn=n+1
+add_option load file1
+test_exp '${#options[@]}' $nn ${#options[@]} &&
+test_exp '${options[$n]}' --load=file1 "${options[$n]}" &&
+test_exp '${options_keys[load]}' 1 "${options_keys[load]}" &&
+test_exp '${options_vals[--load=file1]}' $n "${options_vals[--load=file1]}" ||
+error 1 after add_option load file1
+
+let nnn=nn+1
+add_option load file11
+test_exp '${#options[@]}' $nnn ${#options[@]} &&
+test_exp '${options[$nn]}' --load=file11 "${options[$nn]}" &&
+test_exp '${options_keys[load]}' "$n $nn" "${options_keys[load]}" &&
+test_exp '${options_vals[--load=file11]}' $nn "${options_vals[--load=file11]}" ||
+error 1 after add_option load file11
+
+add_option load file11
+test_exp '${#options[@]}' $nnn ${#options[@]} ||
+error 1 after second add_option load file11
+
+let n=${#options[@]} nn=n+1
+replace_option user user2
+test_exp '${#options[@]}' $nn ${#options[@]} &&
+test_exp '${options[$n]}' --user=user2 "${options[$n]}" &&
+test_exp '${options_keys[user]}' $n "${options_keys[user]}" &&
+test_exp '${options_vals[--user=user2]}' $n "${options_vals[--user=user2]}" ||
+error 1 after replace_option user user2
+
+replace_option user user22
+test_exp '${#options[@]}' $nn ${#options[@]} &&
+test_exp '${options[$n]}' --user=user22 "${options[$n]}" &&
+test_exp '${options_keys[user]}' $n "${options_keys[user]}" &&
+test_exp '${options_vals[--user=user22]}' 3 "${options_vals[--user=user22]}" ||
+error 1 after replace_option user user22
+
+## Args
+
+let n=${#args[@]} nn=n+1 nnn=nn+1
+add_arg foo bar
+test_exp '${#args[@]}' $nnn ${#args[@]} &&
+test_exp '${args[$n]}' foo "${args[$n]}" &&
+test_exp '${args_vals[foo]}' $n "${args_vals[foo]}" &&
+test_exp '${args[$nn]}' bar "${args[$nn]}" &&
+test_exp '${args_vals[bar]}' $nn "${args_vals[bar]}" ||
+error 1 after add_arg foo bar
+
+## launch_command
+
+test_stderr "$launch --batch --load=file1 --load=file11 --user=user22 -- . foo bar" launch_command
+
+## font_size and num_cols
+
+resolution=93
+dimensions=1901
+
+set_font_size
+test_exp font_size 10 "$font_size"
+
+set_num_cols
+test_exp num_cols 4 "$num_cols"
+
+## add_eval
+
+let n=${#options[@]} nn=n+1 nnn=nn+1
+add_eval defconst jgd-horizontal-resolution $resolution
+add_eval defconst jgd-screen-width $dimensions
+add_eval defconst jgd-num-cols $num_cols
+
+test_exp options[$n] '--eval="(defconst jgd-horizontal-resolution 93)"'  "${options[$n]}"
+test_exp options[$nn] '--eval="(defconst jgd-screen-width 1901)"'  "${options[$nn]}"
+test_exp options[$nnn] '--eval="(defconst jgd-num-cols 4)"'  "${options[$nnn]}"
+
+## Constraints
+
+## Geometry
+
+## XDPYINFO
+
+## launch_command
+
+### Emacs-Specific Features
+
+## files, fonts
+## fullness, geometry
+## process command arguments
+## emacs tweaks, launch
+
+### Re-run to test EmacsClient Features
+
+export DISPLAY="$save_DISPLAY"
+exec $0 "$launch_emacsclient"
+
+else
+
+### Test EmacsClient Features
+
+. "$launch_emacsclient" -test -fs
+
+## ssh_xauth_fix
+## frame parameter options
+
+let nn=${#frame_params[@]} n=n-1
+
+
+test_exp frame_params[$n] '(fullscreen . maximized)' "${frame_params[$n]}"
+
+echo DISPLAY=$DISPLAY
+
+[[ -z "$font_size" ]] || [[ -n "${frame_keys[font]}" ]] || echo "no font!"
+
+## files, fonts, eval
+
+echo font_size: "$font_size", frame_keys[font], "${frame_keys[font]}"
+
+## fullness, geometry
+## process command arguments
+## emacsclient tweaks, launch
+
+fi

@@ -1,0 +1,20 @@
+
+			EMACS X MOUSE BINDINGS
+
+
+   Button:	   LEFT		  MIDDLE	   RIGHT
+
+		Set Mark	Set Cursor	Select Window
+
+     SHIFT			Copy		Paste
+
+      CTRL			Cut		Split
+
+SHIFT-CTRL	Buffer Menu	Help Menu	Delete Others
+
+
+Starting Emacs Under X:  emacs -i -w =x80x69-0+0
+
+Starting emacsclient server:
+	M-X start-server	- interactively
+	(start-server nil)	- from .emacs

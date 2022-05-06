@@ -1,0 +1,180 @@
+#!/bin/bash
+
+## configure launcher-common
+
+launch=emacsclient
+# 1=flag, 2=key+value
+declare -Ar option_arity=(
+	[tty]=1 [create-frame]=1 [frame-parameters]=2 [eval]=1
+	[no-wait]=1 [quiet]=1 [display]=2 [parent-id]=2
+	[socket-name]=2 [server-file]=2 [alternate-editor]=2
+)
+# to_add_eval will be eval'ed after add_eval's dependencies are defined
+to_add_eval='add_eval() {
+	add_option eval ; add_arg "$(list_of $@)"
+}'
+
+. emacs-launcher-common.bash
+
+## ssh_xauth_fix
+
+# If we're behind an ssh -[XY] connection we may have
+# authority problems.  Here's a heavy-handed solution:
+ssh_xauth_fix() {
+	case "$DISPLAY" in
+		''|*:0|*:0.*) return 1;;
+	esac
+	local auth_file=$(
+		xauth info |
+			sed -n '/^Authority file:/s/^[^:]*:[[:space:]]*//p'
+				)
+	case "$auth_file" in
+		''|~/.Xauthority) return 2;;
+	esac
+	xauth -f ~/.Xauthority list |
+		while read display proto key; do
+			[[ "$display" = "$DISPLAY" ]] &&
+				add_eval shell-command \
+					"\"xauth add $display $proto $key\""
+		done
+}
+
+ssh_xauth_fix
+
+## frame parameter options
+
+declare -a frame_params=()	# accumulates
+declare -A frame_keys=()	# records indices
+
+declare -Ar frame_para_arity=(
+	[font]=2
+	[fullscreen]=2
+	[user-size]=1									# added automatically
+	[user-position]=1							# added automatically
+)
+
+declare -Ar frame_fullscreen_values=(
+	[fullwidth]=1
+	[fullheight]=1
+	[fullboth]=1
+	[maximized]=1
+)
+
+add_frame_param() {
+	local nargs=${frame_para_arity[$1]}
+	[[ $# == "$nargs" ]] || {
+		warning "bad frame parameter arity $# in $*"
+		return 1
+	}
+	[[ -z "${frame_keys[$1]}" ]] || {
+		warning "duplicate frame key with $*"
+		return 1
+	}
+	case "$1" in
+		fullscreen)
+			(( "${frame_fullscreen_values[$2]}" )) || {
+				warning "illegal frame parameter $*"
+				return 1
+			} ;;
+	esac
+	local n="${#frame_params[@]}"
+	case "$#" in
+		1)	frame_params[$n]="($1)" ;;
+		2)	frame_params[$n]="($1 . $2)" ;;
+		*) warning "unknown frame parameter arity $*"
+			 return 1 ;;
+	esac
+	frame_keys[$1]="$n"
+	return 0
+}
+
+add_frame_args() {
+	(( ${#frame_params[@]} )) || return 1
+	add_option frame-parameters \
+		 "$(list_of ${frame_params[@]})"
+}
+
+## files, fonts, eval
+
+# emacsclient start a daemon if no alternate editor
+add_option alternate-editor ''
+declare -a files=()
+
+add_file() { files[${#files[@]}]="$1"; add_eval find-file "\"$1\""; }
+add_files() { while $#; do add_file "$1"; shift; done; }
+
+add_font() { add_frame_param font "\"$1\""; }
+
+## fullness, geometry
+
+add_fullness() {
+	case "$1" in
+		-fh|--fullheight)
+			specify height fullheight &&
+				add_frame_param fullscreen fullheight ;;
+		-fw|--fullwidth)
+			specify width fullwidth &&
+				add_frame_param fullscreen fullwidth &&
+				"${mode[jgd]}" &&
+				add_eval jgd-split-window "$num_cols" ;;
+		-fs|--fullscreen)
+			specify both fullscreen &&
+				add_frame_param fullscreen maximized &&
+				"${mode[jgd]}" &&
+				add_eval jgd-split-window "$num_cols" ;;
+		*) warning ignoring unknown option "$1" ;;
+	esac
+}
+
+add_geometry() {
+	get_geometry "$1" || return 1
+	[[ -n "$width" ]] && add_frame_param width "$width"
+	[[ -n "$height" ]]  && add_frame_param width "$height"
+	[[ -z "$width" ]] && [[ -z "$height" ]] ||
+		add_frame_param user-size
+	[[ -n "$left" ]] && add_frame_param width "$left"
+	[[ -n "$top" ]] && add_frame_param width "$top"
+	[[ -z "$left" ]] && [[ -z "$top" ]] ||
+		add_frame_param user-position
+}
+
+## process command arguments
+
+while (( $# )); do
+	case "$1" in
+		--) shift; add_files "$@"; break ;;
+		-fn|--font) shift; add_font "$1" ;;
+		-g|-geometry) shift; add_geometry "$1"	;;
+		-fw|-fh|-fs|--full*) add_fullness "$1"	;;
+		-[!-]*) set_mode "$1" ;;
+		--[!-]*) add_option "$1" ;;
+		*)	add_file "$1"
+	esac; shift
+done
+
+## emacsclient tweaks, launch
+
+add_option --no-wait
+
+if [[ -n "$DISPLAY" ]]; then
+	add_option --create-frame
+else
+	add_option --tty
+fi
+
+# if no font specified, provide a default
+[[ -z "$font_size" ]] || [[ -n "${frame_keys[font]}" ]] ||
+	add_font 'DejaVu Sans condensed-10'
+
+# (frame-parameter nil 'font)
+# "-unknown-DejaVu Sans-normal-normal-semicondensed-*-13-*-*-*-*-0-iso10646-1"
+# add_font "-unknown-DejaVu Sans-normal-normal-semicondensed-*-$font_size-*-*-*-*-0-iso10646-1"
+
+#	"Dejavu Sans-$font_size:widthtype=condensed"
+#	"Dejavu Sans Condensed-$font_size"
+
+# if no file specified, use current directory
+(( ${#files[@]} )) || add_file "."
+
+add_frame_args
+launch_command

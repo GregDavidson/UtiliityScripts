@@ -1,0 +1,64 @@
+
+
+
+
+		      EMACS Mh-Summary Mode
+
+
+
+	Major mode for "editing" an MH folder scan listing.
+	Messages can be marked for refiling and deletion.
+	Both actions defered until requested with e or x.
+
+
+	Keymap:
+
+	  n	mh-next-line		C-x w	 mh-widen
+	  p	mh-previous-line	C-x n	 mh-narrow-to-seq
+	  d	mh-delete-msg
+	  ^	mh-move-msg		  M-r	 mh-rescan-folder
+	  !	mh-move-or-write-again	  M-s	 mh-search-folder
+	  u	mh-undo			  M-p	 mh-renumber-folder
+	  .	mh-show			  M-l	 mh-list-folders
+	SPC	mh-page-msg		  M-k	 mh-kill-folder
+	DEL	mh-previous-page	  M-f	 mh-visit-folder
+	  g	mh-goto-msg		  M-e	 mh-extract-rejected-mail
+	  a	mh-answer		M-DEL	 mh-page-digest-backwards
+	  s	mh-send			M-SPC	 mh-page-digest
+	  f	mh-forward		  M-u	 mh-undo-folder
+	  r	mh-redistribute		  M-b	 mh-burst-digest
+	  e	mh-execute-commands	  M-%	 mh-delete-msg-from-seq
+	  x	mh-execute-commands
+	  i	mh-inc-folder
+	  >	mh-write-msg-to-file
+	  c	mh-copy-msg
+	  t	mh-toggle-summarize
+	  l	mh-print-msg
+	C-x 	Prefix Command
+	 M-	Prefix Command
+	  %	mh-put-msg-in-seq
+	  ?	mh-msg-is-in-seq
+
+	    A prefix argument (C-u) to delete, move, list, or undo
+	    applies the action to a message sequence.
+
+
+	Variables:
+
+	 mh-clean-message-header (nil)
+	    Non-nil means remove header lines matching the regular
+	    expression specified in mh-invisible-headers from messages.
+
+	 mh-use-mhl (nil)
+	    Non-nil means use mhl to format displayed messages.
+
+	 mh-lpr-command-format ("lpr -p -J '%s'")
+	    Format for command used to print a message on a system
+	    printer.
+
+	 mh-summary-height (4)
+	    Number of lines in the summary window.
+
+	 mh-ins-buf-prefix (">> ")
+	    String to insert before each non-blank line of a
+	    message as it is inserted in a letter being composed.

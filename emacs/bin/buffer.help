@@ -1,0 +1,53 @@
+
+
+
+
+			EMACS Buffer Menu Mode
+
+
+
+      Summary:
+
+	Major mode for editing a list of buffers.
+	Each line describes one of the buffers in Emacs.
+	Letters do not insert themselves; instead, they are commands.
+
+	m -- mark buffer to be displayed.
+	q -- select buffer of line point is on.
+	     Also show buffers marked with m in other windows.
+	1 -- select that buffer in full-screen window.
+	2 -- select that buffer in one window,
+	     together with buffer selected before this one in another window.
+	f -- select that buffer in place of the buffer menu buffer.
+	o -- select that buffer in another window,
+	     so the buffer menu buffer remains visible in its window.
+	~ -- clear modified-flag on that buffer.
+	s -- mark that buffer to be saved, and move down.
+	d -- mark that buffer to be deleted, and move down.
+	k -- same
+      C-d -- mark that buffer to be deleted, and move up.
+	x -- delete or save marked buffers.
+	u -- remove all kinds of marks from current line.
+      DEL -- back up a line and remove marks.
+
+
+
+      Keymap:
+
+	C-d         Buffer-menu-delete-backwards
+	C-k         Buffer-menu-delete
+	SPC         next-line
+	  1         Buffer-menu-1-window
+	  2         Buffer-menu-2-window
+	  ?         describe-mode
+	  d         Buffer-menu-delete
+	  f         Buffer-menu-this-window
+	  k         Buffer-menu-delete
+	  m         Buffer-menu-mark
+	  o         Buffer-menu-other-window
+	  q         Buffer-menu-select
+	  s         Buffer-menu-save
+	  u         Buffer-menu-unmark
+	  x         Buffer-menu-execute
+	  ~         Buffer-menu-not-modified
+	DEL         Buffer-menu-backup-unmark
