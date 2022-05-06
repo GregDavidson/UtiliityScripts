@@ -1,0 +1,108 @@
+% Concert macros begin here
+% First define the fonts and sizes:
+\font\twelverm=cmr10 at 12pt   % cmr12 would be better, if available
+\font\twelvebf=cmbx10 at 12pt  % (a cheap substitute for cmbx12)
+\font\twelveit=cmti10 at 12pt  % (a cheap substitute for cmti10)
+\font\twelvesl=cmsl10 at 12pt  % (a cheap substitute for cmsl12)
+\font\twelvemus=cmmi10 at 12pt % (a cheap substitute for cmmi12)
+
+\font\eightrm=cmr8
+\font\eightbf=cmbx8
+\font\eightit=cmti8
+\font\eightsl=cms18
+\font\eightmus=cmmi8
+
+\def\bigtype{\let\rm=\twelverm \let\bf=\twelvebf
+  \let\it=\twelveit \let\sl=\twelvesl \let\mus=\twelvemus
+  \baselineskip=14pt minus 1pt
+  \rm}
+\def\medtype{\let\rm=\tenrm \let\bf=\tenbf
+  \let\it=\tenit \let\sl=\tensl \let\mus=\teni
+  \baselineskip=12pt minus 1pt
+  \rm}
+\def\smalltype{\let\rm=\eightrm \let\bf=\eightbf
+  \let\it=\eightit \let\sl=\eightsl \let\mus=\eighmus
+  \baselineskip=9.5pt minus .75pt
+  \rm}
+
+\hsize=4in
+\nopagenumbers
+\bigtype
+
+% Here are some musical controls:
+\def\(#1){{\rm(}#1\/{\rm)}}
+\def\sharp{\raise.4ex\hbox{\mus\char"5D}}
+\def\flat{\raise.2ex\hbox{\mus\char"5B}}
+\let\,=\thinspace
+
+% And macros defining the parts of the program:
+\def\composition#1{\halign{\bf\quad##\hfil\cr
+	\kern-1em#1\crcr}} % use \cr's if more than one line
+\def\composer#1{\rightline{\bf#1}}
+\def\movements#1{\haline{\quad\it##\hfil&&\qquad\it##\hfil\cr#1\crcr}}
+\def\soloists#1{\centerline{\bf\vbox{\halign{##\hfil\cr#1\crcr}}}}
+
+% Our orchestra's title:
+\def\tsaologo{\vbox{\bigtype\bf
+	\line{\hrulefill}
+	\kern-.5\baselineskip
+	\line{\hrulefill\phantom{ THE ST.\,ANFORD ORCHESTRA }\hrulefill}
+	\kern-.5\baselineskip
+	\line{\hrulefill\hbox{ THE ST.\,ANFORD ORCHESTRA }\hrulefill}
+	\kern-.5\baselineskip
+	\line{\hrulefill\phantom{ R. J. Drofnats, Conductor }\hrulefill}
+	\kern-.5\baselineskip
+	\line{\hrulefill\hbox{ R. J. Drofnats, Conductor }\hrulefill}
+	}}
+
+% Here's the data for this concert:
+
+\tsaologo
+\medskip
+\centerline{Friday, November 17, 1986, 8:00 p.m.}
+\bigskip
+\centerline{\bf PROGRAM}
+\medskip
+
+\composition{Variations on a Theme by Tchaikovsky}
+\composer{Anton S. Arensky (1861--1906)}
+\smallskip
+{\medtype
+\movements{Tema: Moderato\cr
+  Var.~I: Un poco pi\`u mosso&Var.~V: Andante\cr
+  Var.~II: Allegro non troppo&Var.~VI: Allegro con spirito\cr
+  Var.~III: Andantino tranquillo&Var.~VII: Andante con moto\cr
+  Var.~IV: Vivace&Coda: Moderato\cr}
+}
+
+\bigskip
+
+\composition{Concerto for Horn and Harart, S.\,27}
+\composer{P. D. Q. Bach (1807--1742)?}
+\smallskip
+\movements{Allegro con brillo\cr
+  Tema con variazione \(su una tema differente)\cr
+  Menuetto con panna e zucchero\cr}
+\medskip
+\soloists{Ben Lee User, horn\cr
+  Peter Schickele, hardart\cr}
+
+\bigskip
+\centerline{INTERMISSION}
+\bigskip
+
+\composition{Symphony No.\,3 in E\flat\ Major\cr
+  Op.\,55, ``The Eroica''\cr}
+\composer{Ludwig van Beethoven (1770--1827)}
+\smallskip
+\movements{Allegro con brio\cr
+  Marcia funebre: Adagio assai\cr
+  Scherzo: Allegro vivace\cr
+  Finale: Allegro molto\cr}
+
+\bigskip
+\smalltype \noindent
+Members of the audience are kindly requested to turn off the
+alarms on their digital watches, and to cough only between movements.
+
+\bye
