@@ -1,0 +1,3 @@
+if cmp -s $1 $2/$1
+then rm $2/$1
+fi

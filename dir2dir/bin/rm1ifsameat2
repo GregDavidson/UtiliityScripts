@@ -1,0 +1,4 @@
+if cmp -s "$1" "$2/$1"
+then    rm -f "$1"
+	echo "$1" removed
+fi

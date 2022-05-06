@@ -1,0 +1,11 @@
+for f
+do
+  ff=`basename $f`
+  fi=`ls -i $f | awk '{print $1}'`
+  for g in `find . -name $ff -links 1 ! -inum $fi -print` ;do
+    if [ $f != $g ] && diff -wh $f $g >/dev/null ; then
+      /usr/5bin/ln $f $g
+      echo ln $f $g
+    fi
+  done
+done

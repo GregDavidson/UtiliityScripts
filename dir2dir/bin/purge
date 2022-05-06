@@ -1,0 +1,7 @@
+#!/bin/bash
+for d
+do
+('cd' $d ; find . -type f \( -name '#*' -o -name core \) -exec rm -f {} \;)
+#('cd' $d ; find . -type f \( -name '#*' -o -name '*~' -o -name core \) -exec rm -f {} \;)
+done
+# Would be great to add some options

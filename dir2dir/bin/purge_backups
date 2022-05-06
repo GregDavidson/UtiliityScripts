@@ -1,0 +1,24 @@
+#!/bin/ksh
+Program=$(basename $0)
+err() { echo "$@" >&2; }
+error() { err "$Program error: $*"; }
+exists() { [ -f "$1" ]; code=$?; [ $code -ne 0 ] && error "No file $1"; return $code; }
+newer_than() { [ "$1" -nt "$2" ];  x=$?; [ $x -eq 0 ] && error "$1 newer than $2"; return $x; }
+shorter_than() { [ $(file_size "$1") -lt $(file_size "$2") ]; x=$?; [ $x -eq 0 ]  && error "$1 shorter than $2"; return $x; }
+file_size() { ls -ld $1 | awk '{print $5}'; }
+for d in "${@:-.}" ; do
+    for f in $(find "$d" -type f \( -name '*~' -o -name '*.bak' \) -print); do
+        exists "$f" || continue
+        case "$f" in
+	 *~) pattern="\(.*\)~" ;;
+	 *.bak)  pattern="\(.*\).bak" ;;
+	 *~[0-9]~|*~[0-9][0-9]~)  pattern="\(.*\)~" ;;
+	 *) error "Don't know how to find backup of $f." && continue ;;
+        esac
+        ff=$(expr "$f" : "$pattern") || (error "Can't decompose $f with $pattern" && continue)
+        exists "$ff" || continue
+        newer_than "$f" "$ff" && continue
+        shorter_than "$ff" "$f" && continue
+        rm "$f"
+    done
+done

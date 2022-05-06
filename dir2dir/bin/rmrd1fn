@@ -1,0 +1,19 @@
+d=$1
+shift
+for f
+do
+    [ -f $f -a -f $d/$f ] && cmp -s $f $d/$f && rm $f
+    [ -d $f -a -d $d/$f ] && rmrd1d2 $d/$f $f
+done
+exit
+
+# rmrd1fn dir file1 ... filen
+set d = $argv[1]
+set argv = ($argv[2-$#argv])
+foreach f ($argv)
+    if ( -f $f && -f $d/$f && { cmp -s $f $d/$f } ) then
+      /bin/rm $f
+    else if ( -d $f && -d $d/$f ) then
+      rmrd1d2 $d/$f $f
+    endif
+end

@@ -1,0 +1,30 @@
+# rmsame DIR1 DIR2
+# For all files under DIR1 which are the same as files under DIR2:
+#	Move them to subdirectories DIR1_NAME and DIR2_NAME
+#	under those names.
+
+cd $argv[1]
+if (! -d DIR1_NAME) mkdir DIR1_NAME
+if (! -d DIR2_NAME) mkdir DIR2_NAME
+
+set ff = ()
+foreach f (*)
+	if (-f $f) set ff = ($ff $f)
+end
+
+set gg = ()
+foreach g ($argv[2]/*)
+	if (-f $g) set gg = ($gg $g)
+end
+
+foreach g ($gg)
+	foreach f ($ff)
+		cmp -s $f $g
+		if ($status == 0) then
+			ln $f DIR2_NAME/$g:t
+			mv $f DIR1_NAME
+			echo $argv[0]/$f same as $g
+			break
+		endif
+	end
+end

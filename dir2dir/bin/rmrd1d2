@@ -1,0 +1,7 @@
+( chdir $2 ; rmrd1fn $1 `ls` )
+rmdir $2 2> /dev/null
+exit
+
+# rmrd1d2 dir1 dir2
+( chdir $2 ; rmrd1fn $1 `ls` )
+rmdir $2 >& /dev/null

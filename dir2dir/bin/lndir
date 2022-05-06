@@ -1,0 +1,32 @@
+#!/bin/csh
+# lndir old new - recursively copy old to new using links as much as possible
+set noglob
+
+set t = $1:t
+if (-e $2/$t) then
+	echo $1 exists already\!
+	echo lndir bailing out\!
+	exit 1
+endif
+
+set type = (`file $1`)
+if ($type[2] == symbolic) then
+    echo $0: $1 is a symbolic link
+    ln $1 $2
+else if (-f $1) then
+    ln $1 $2
+else if (-d $1) then
+    mkdir $2/$t
+    unset noglob
+    set nonomatch
+    set ff = ($1/*)
+    set noglob
+    unset nonomatch
+    if ($ff[1] != '$1/*') then
+	foreach f ($ff)
+	    lndir $f $2/$t
+	end
+    endif
+else
+    echo $0: I don\'t know what $1 is\!
+endif

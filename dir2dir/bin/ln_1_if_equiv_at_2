@@ -1,0 +1,5 @@
+if diff -wh $1 $2/$1 >/dev/null
+then    rm -f $1
+	ln $2/$1 $1
+	echo ln $2/$1 $1
+fi

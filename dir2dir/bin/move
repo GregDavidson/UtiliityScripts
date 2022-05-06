@@ -1,0 +1,176 @@
+#!/bin/bash
+pgm_name="${0##*/}"
+pgm_version="0.2"
+pgm_author="J. Greg Davidson"
+pgm_purpose="Move objects (files, links, directories) to a new destination (target)"
+pgm_usage="$pgm_name [ --help | --version | --log ] item-to-move... destination"
+pgm_notes=(
+	"follows principle of least astonishment"
+	"asks about potentially ambiguous situations"
+	"remote target handed with rsync-dirs"
+	"limitation: only target can be remote"
+	"local non-linked targets will be backed up"
+)
+pgm_log=(
+	"Saturday 13 December 2014, Initial Version 0.2, J. Greg Davidson"
+)
+
+backup="--backup=numbered"
+mv="mv $backup"
+
+out() { printf "%s\n" "$*"; }
+err() { >&2 out "$*"; }
+error() { err "$pgm_name error: $*"; }
+die() { local code="$1"; shift; error "$*"; exit $code; }
+usage() { err "Usage: $pgm_usage"; exit -1; }
+is_cmd() { type "$1" > /dev/null; }
+
+for f in realpath dirname readlink; do
+	is_cmd "$f" || die 3 "Can't find command $f"
+done
+
+ynq() {
+	read -r -p "$* [ynq]: "
+	case "$REPLY" in
+		[yY]) return 0 ;;
+		[nN]) return 1 ;;
+		[qQ]) err "Goodbye!" ; exit 1 ;;
+		*) ynq "y for yes, n for no, q for quit"
+	esac
+}
+
+cmd() {
+	ynq "$@"
+	case $? in
+			0) "$@" ;;
+			1) return 2 ;;
+		esac
+}
+
+kind_of() {
+		if [ -L "$1" ]; then echo link
+	elif [ -f "$1" ]; then echo file
+	elif [ -d "$1" ]; then echo dir
+	else echo unknown
+		fi
+}
+
+declare -A move_proc
+
+move_proc[file]=move_file
+move_file() {
+	obj="$2" obj_path="$3" name="$4"
+	dst_type="$5" dst="$6" dir="$8"
+	case "$dst_type" in
+		link) cmd rm -i "$dst" && cmd mv  "$obj" "$dir/$name"	;;
+		file) cmd $mv "$obj" "$dst"	;;
+		dir)	cmd $mv "$obj" "$dst"	;;
+		*) error "Can't move link to $dst_type target!" ;;
+	esac
+}
+
+move_proc[link]=move_link
+move_link() {
+	obj="$2" obj_path="$3" name="$4"
+	dst_type="$5" dst="$6" dir="$8"
+	case "$dst_type" in
+		link) cmd rm -i "$obj" "$dst" && cmd ln -s  "$obj_path" "$dir/$name" ;;
+		file) cmd $mv /dev/null "$dst" &&
+						cmd rm "$dst" && cmd ln -s "$obj_path" "$dir/$name" ;;
+		dir)	cmd ln -s "$obj_path" "$dst/$name" ;;
+		*) error "Can't move link to $dst_type target!" ;;
+	esac
+}
+
+move_proc[dir]=move_dir
+move_dir() {
+	obj="$2" obj_path="$3" name="$4"
+	dst_type="$5" dst="$6" dir="$8"
+	case "$dst_type" in
+		link) cmd rm -i "$dst" && cmd mv  "$obj" "$dir/$name"	;;
+		file) ynq "Replace file $dst with directory $obj?" &&
+						cmd $mv "$obj" "$dst" ;;
+		dir)
+			if ynq "Move $obj under $dst?"; then
+				cmd $mv "$obj" "$dst"
+			elif ynq "Replace $dst with $obj?"; then
+				if ynq "Backup $dst?"; then
+					local i=0
+					while [[ -e "$dst.~$i~" ]]; do let ++i; done
+					cmd mv "$dst" "$dst.~$i~"
+					out Directory "$dst" backed up to "$dst.~$i~"
+				fi
+				cmd $mv "$obj" "$dst"
+			fi
+			;;
+		*) error "Can't move link to $dst_type target!" ;;
+	esac
+}
+
+# ---> Need warning for cross-device moves! <--- !!
+move_() {
+	obj_type="$1" ; obj="$2"; dst_type="$3"; dst="$4"
+	out move $obj_type "$obj" to $dst_type "$dst"
+	local obj_name="${obj##*/}"
+	if ! local obj_path=$(realpath "$obj"); then
+		error "Can't get path for $obj_type $obj"
+		return 1
+	fi
+	local obj_dir = $(dirname "$2)"
+	[ -w "$obj_dir" ] ||
+		error "Can't move $obj from non-modifiable directory $obj_dir"
+	if ! local dst_path=$(realpath "$dst"); then
+		error "Can't get path for $dst_type $dst"
+		return 1
+	fi
+	local dst_dir="$(dirname $dst_path)"
+	local proc=${move_proc[$obj_type]:-unknown}
+	case $obj_type in
+		unknown) usage ;;
+		*) "$proc" "$obj_type" "$obj" "$obj_path" "$obj_name" \
+							 "$dst_type" "$dst" "$dst_path" "$dst_dir"	;;
+	esac
+}
+
+move() {
+	[[ $# < 2 ]] && usage
+	local args=("$@")
+	local i last_arg_index=$(( ${#args[@]} - 1 ))
+	local target="${args[$last_arg_index]}"
+	local dst=$(readlink -e "$target") ||
+		die 10 "failed target on readlink $target"
+	local dst_kind=$(kind_of "$dst")
+	case $dst_kind in
+		remote)
+			printf "move %s to %s %s" "$1" $dst_kind "$2"
+			cmd rsync-dirs "$@"
+			;;
+		file)
+			(( $# == 2 )) || die 11 "too many args for dst type file"
+			move_ $(kind_of "${args[$1]}") "${args[$1]}" $dst_kind "$dst"
+			;;
+		dir)
+			for i in ${!args[@]}; do
+				[[ $i == $last_arg_index ]] && break
+				move_ $(kind_of "${args[$i]}") "${args[$i]}" $dst_kind "$dst"
+			done
+			;;
+		*) error "Can't move anything to $dst_kind $dst"
+			;;
+	esac
+}
+
+case "$1" in
+	--help)
+		out "$pgm_usage"
+		for i in "${!pgm_notes[@]}"; do
+			printf "\t%s\n" "${pgm_notes[$i]}"
+		done ;;
+	--version) printf "%s %s\n" "$pgm_name" "$pgm_version" ;;
+	--log)
+		printf "%s\n" "$pgm_name"
+		for i in "${!pgm_log[@]}"; do
+			printf "\t%s\n" "${pgm_log[$i]}"
+		done ;;
+	*) move "$@" ;;
+esac

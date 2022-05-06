@@ -1,0 +1,21 @@
+#!/bin/ksh
+Program=$(basename $0)
+err() { echo "$@" >&2; }
+error() { code=$1; shift; err "$Program error $code: $*"; }
+file_size() { ls -ld $1 | awk '{print $5}'; }
+for d in "${@:-.}" ; do
+    for f in $(find "$d" -type f \( -name '*~' -o -name '*.bak' \) -print); do
+        [ -f "$f" ] || error 1 "Can't find file $f" && break
+        case "$f" in
+	 *~) pattern="\(.*\)~" ;;
+	 *.bak)  pattern="\(.*\).bak" ;;
+	 *~[0-9]~|*~[0-9][0-9]~)  pattern="\(.*\)~" ;;
+	 *) error 2 "Don't know how to find backup of $f." && break ;;
+        esac
+        ff=$(expr "$f" : "$pattern") || error 3 "Can't decompose $f with $pattern" && break
+        [ -f "$ff" ] || error 4 "No file $ff as original of $f" && break
+        [ "$f" -nt "$ff" ] && error 5 "Supposed backup file $f newer than supposed original file $ff" && break
+        [ $(file_size "$ff") -lt $(file_size "$f") ] && error 6 "$ff shorter than $f" && break
+        echo rm "$f"
+    done
+done
