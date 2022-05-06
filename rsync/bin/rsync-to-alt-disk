@@ -1,0 +1,10 @@
+#!/bin/sh
+lib=/home/greg/SW/rsync/lib
+exclude=$lib/exclude
+exclude_more=$lib/exclude_more
+if [ $# != 1 -o ! -d "$1" ]; then
+	>&2 echo "Usage: $0 destination-dir"
+	exit 1
+fi
+echo rsync -avzlHS --delete "--exclude-from=$exclude" "--exclude-from=$exclude_more" /home/greg "$1"
+rsync -avzlHS --delete "--exclude-from=$exclude" "--exclude-from=$exclude_more" /home/greg "$1"

@@ -1,0 +1,17 @@
+#!/bin/sh
+lib=/home/greg/SW/rsync/lib
+exclude=$lib/exclude.wicci
+src=/home/greg/.Wicci
+dst=/home/Wicci
+if [ $# = 0 ]; then
+	host=www.wicci.org
+	login=-lWicci
+elif [ $# = 1 ]; then
+	host="$1"
+else
+	>&2 echo "Usage: $0 [destination-host]"
+	exit 1
+fi
+cd $src || exit 1
+set +x
+rsync -avzlHS --rsh="ssh $login -p40" --delete --exclude-from="$exclude" * "$host:$dst"

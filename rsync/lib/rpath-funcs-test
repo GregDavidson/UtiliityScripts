@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# functions to generate messages to stderr and maybe exit script
+
+stdout() { >&2 echo -E "$*"; }
+msg() { kind="$1" ; shift; stdout "$0 $kind: $*"; }
+error() { msg "error" "$*"; }
+
+# functions to break down paths into their components
+
+. ~/SW/rsync/lib/rpath-funcs
+
+user1=greg
+host1=foo
+path1=bar
+remote1="$user1@$host1:$path1"
+
+[ "$(rpath_user "$remote1")" == "$user1" ] ||
+	error rpath_user "$remote1" != "$user1"
+[ "$(rpath_host "$remote1")" == "$host1" ] ||
+	error rpath_host "$remote1" != "$host1"
+[ "$(rpath_path "$remote1")" == "$path1" ] ||
+	error rpath_path "$remote1" != "$path1"
+
+user2=''
+host2=foo
+path2=bar
+remote2="$host2:$path2"
+
+[ "$(rpath_user "$remote2")" = "$user2" ] ||
+	error rpath_user "$remote2" != "$user2"
+[ "$(rpath_host "$remote2")" = "$host2" ] ||
+	error rpath_host "$remote2" != "$host2"
+[ "$(rpath_path "$remote2")" = "$path2" ] ||
+	error rpath_path "$remote2" != "$path2"
+
+user3=''
+host3=''
+path3=bar
+remote3="$path3"
+
+[ "$(rpath_user "$remote3")" = "$user3" ] ||
+	error rpath_user "$remote3" != "$user3"
+[ "$(rpath_host "$remote3")" = "$host3" ] ||
+	error rpath_host "$remote3" != "$host3"
+[ "$(rpath_path "$remote3")" = "$path3" ] ||
+	error rpath_path "$remote3" != "$path3"
+

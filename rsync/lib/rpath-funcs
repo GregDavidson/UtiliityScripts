@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# functions to decompose remote paths into their components
+
+user_host_rpath() {
+    local rpath="$3"
+    [[ -n "$2" ]] && rpath="$2:$rpath"
+    [[ -n "$1" ]] && rpath="$1@$rpath"
+    echo -n "$rpath"
+}
+
+rpath_user() { expr \
+  " $1" : ' \([A-Za-z][A-Za-z0-9_.-]*\)@[A-Za-z1-9][A-Za-z0-9_.-]*:.*'
+}
+
+# according to the doc'n: 'rpath_host_buggy bar' --> ''
+# but in opensuse coreutils-6.12-32.1 it --> '0'
+rpath_host_buggy() { expr \
+     " $1" : ' [A-Za-z][A-Za-z0-9_.-]*@\([A-Za-z1-9][A-Za-z0-9_.-]*\):.*' \
+ '|' " $1" : ' \([A-Za-z1-9][A-Za-z0-9_.-]*\):.*'
+}
+
+rpath_host() {
+    local host=$(rpath_host_buggy "$1")
+    case "$host" in
+	(0) echo -n '' ;;
+	(*) echo -n "$host"
+    esac
+}
+
+rpath_path() { expr \
+     " $1" : ' [A-Za-z][A-Za-z0-9_.-]*@[A-Za-z1-9][A-Za-z0-9_.-]*:\(.*\)' \
+ '|' " $1" : ' [A-Za-z1-9][A-Za-z0-9_.-]*:\(.*\)' \
+ '|' " $1" : ' \(.*\)'
+}

@@ -1,0 +1,12 @@
+#!/bin/sh
+lib=/home/greg/SW/rsync/lib
+exclude=$lib/exclude-firefox
+dir=$HOME/.mozilla
+if [ $# = 1 ]; then
+	host="$1"
+else
+	>&2 echo "Usage: $0 source-host"
+	exit 1
+fi
+echo rsync -avzlHS --delete --exclude-from=$exclude --rsh=ssh "$host:$dir/" "$dir"
+rsync -avzlHS --delete --exclude-from=$exclude --rsh=ssh "$host:$dir/" "$dir"

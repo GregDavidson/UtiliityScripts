@@ -1,0 +1,172 @@
+#!/bin/bash
+prog_name=${0##*/}		# strip off directory path
+purpose="Copy a source dir under/into a destination dir with rsync."
+use_path="[user@][host:][dirpath]"
+use_options="[--help] [--nike] [--into] [--delete]"
+use_cmd="$prog_name $use_options $use_path $use_path"
+use_msg="Usage: $use_cmd"
+   help_help="    --help  generate this help text and exit"
+   help_nike="    --nike  just do it, don't ask for confirmation"
+   help_into="    --into  merge source dir into destination dir"
+ help_delete="  --delete  delete files from dst not present in src"
+help_options="$help_help\\n$help_nike\\n$help_into\\n$help_delete"
+help="$use_msg\\n$help_options\\n$purpose"
+
+# Add this in to option system more gracefully??
+super=/home/greg
+lib="$super"/SW/rsync/lib
+exclude_file="$lib"/exclude 
+if [ -f "$exclude_file" ]; then
+	exclude="--exclude-from=$exclude_file"
+else
+	exclude=""
+fi
+
+# functions to generate messages to stderr and maybe exit script
+
+err() { >&2 echo -e "$*"; }
+bye() { code="$1" ; shift ; err "$*"; exit "$code"; }
+die() { code="$1" kind="$2" ; shift 2; bye "$code" "$prog_name $kind: $*"; }
+error() { code="$1" ; shift ; die "$code" "error" "$*"; }
+use_error() { bye 2 "$use_msg"; }
+
+# functions to decompose remote paths into their components
+# (from lib/rpath-funcs)
+
+user_host_rpath() {
+    local rpath="$3"
+    [[ -n "$2" ]] && rpath="$2:$rpath"
+    [[ -n "$1" ]] && rpath="$1@$rpath"
+    echo -n "$rpath"
+}
+
+rpath_user() { expr \
+  " $1" : ' \([A-Za-z][A-Za-z0-9_.-]*\)@[A-Za-z1-9][A-Za-z0-9_.-]*:.*'
+}
+
+# according to the doc'n: 'rpath_host_buggy bar' --> ''
+# but in opensuse coreutils-6.12-32.1 it --> '0'
+rpath_host_buggy() { expr \
+     " $1" : ' [A-Za-z][A-Za-z0-9_.-]*@\([A-Za-z1-9][A-Za-z0-9_.-]*\):.*' \
+ '|' " $1" : ' \([A-Za-z1-9][A-Za-z0-9_.-]*\):.*'
+}
+
+rpath_host() {
+    local host=$(rpath_host_buggy "$1")
+    case "$host" in
+	(0) echo -n '' ;;
+	(*) echo -n "$host"
+    esac
+}
+
+rpath_path() { expr \
+     " $1" : ' [A-Za-z][A-Za-z0-9_.-]*@[A-Za-z1-9][A-Za-z0-9_.-]*:\(.*\)' \
+ '|' " $1" : ' [A-Za-z1-9][A-Za-z0-9_.-]*:\(.*\)' \
+ '|' " $1" : ' \(.*\)'
+}
+
+
+# specify defaults
+
+confirm_flag="true"
+delete_flag="false"
+merge_flag="false"
+
+src="" ; dst=""
+
+# process arguments
+for arg; do
+    case $arg in
+	(--help) bye 0 "$help" ;;
+	(--nike) confirm_flag="false" ;;
+	(--into) merge_flag="true" ;;
+	(--delete) delete_flag="true" ;;
+	(*)   if [ -z "$src" ]; then src="$arg"
+	    elif [ -z "$dst" ]; then dst="$arg"
+	    else use_error
+	      fi
+    esac
+done
+
+for flag in "$confirm_flag" "$merge_flag" "$delete_flag"; do
+    case "$flag" in
+	(true|false) ;;
+	(*) error 9 "$flag" must be true or false ;;
+    esac
+done
+
+# some validity checks on src and dst
+
+[[ -n "$src" && -n "$dst" ]] || use_error
+
+src_user=$(rpath_user "$src")
+src_host=$(rpath_host "$src")
+src_path=$(rpath_path "$src")
+
+dst_user=$(rpath_user "$dst")
+dst_host=$(rpath_host "$dst")
+dst_path=$(rpath_path "$dst")
+
+[[ -n "$src_host" || -d "$src" ]] || error 3 No local directory "$src"
+[[ -z "$src_user" || -n "$src_host" ]] || error 3 user w/o host in "$src"
+
+[[ -n "$dst_host" || -d "$dst" ]] || error 3 No local directory "$dst"
+[[ -z "$dst_user" || -n "$dst_host" ]] || error 3 user w/o host in "$dst"
+
+[[ "$src_path" != "?*/" ]] ||
+	error 3 "Trailing / in source '$src' confusing, use '--into' option"
+
+# build option string along with explanations
+
+options="$exclude"		# options for rsync separated by spaces
+option_help=''			# explanation of options separated by #'s
+
+option() {			# add an option and its explanation
+  options="$options $1"
+  local spaces='                ' # field width long
+  local pad=$(( ${#spaces} - ${#1} ))
+  [[ $pad < 0 ]] && pad="0"
+  local option="${spaces:0:$pad}$1"
+  shift
+  option_help="$option_help\\n$option $*"
+}
+
+# comment out, rather than delete, unwanted options
+# feel free to add more options from the manual
+# quote any options or explanations containing metacharacters
+
+option --rsh=ssh	transfer using ssh protocol
+option --update		skip files that are newer on the receiver
+option --hard-links     preserve hard links
+option --sparse         handle sparse files efficiently
+
+# option --archive	archive mode: same as these next eight options:
+option --recursive      recurse into directories
+option --links          copy symlinks as symlinks
+option --perms          preserve permissions
+option --times          preserve modification times
+option --group          preserve group
+option --owner          'preserve owner (super-user only)'
+# option --devices        'preserve device files (super-user only)'
+# option --specials       preserve special files
+
+option --verbose        increase verbosity
+option --compress       compress file data during the transfer
+
+$delete_flag && option --delete delete files from dst not present in src
+
+if $merge_flag; then nsrc="$src/"; else nsrc="$src"; fi
+echo Proposed command:
+echo rsync $options "$nsrc" "$dst"
+echo Explained as follows:
+
+"$confirm_flag" && {
+    if $merge_flag; then mode="into"; else mode="under"; fi
+    echo -n "Copy '$src' $mode '$dst' using rsync with options:"
+    echo -e "$option_help"
+    echo -n "Continue? [no/yes] "
+    read ans junk
+    [ yes = "$ans" ] || { echo Allright then, bye! ; exit 0; }
+}
+
+rsync $options "$nsrc" "$dst"

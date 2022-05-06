@@ -1,0 +1,97 @@
+#!/bin/sh
+
+# rsync a specific source directory to a specific destination directory
+# source, destination and options are specified pretty clearly
+# consider program specials module if you prefer control from arguments
+
+# die message_args - generate error message and terminate script
+die() { >&2 echo "$0 error: $*"; exit 1; }
+
+# specify whether script should ask for confirmation
+confirm=true			# true or false
+
+# specify where the files are coming from
+# leave user and host empty for localhost
+src_user=
+src_host=
+src_dir='/mnt/hda1/Documents and Settings/Scan/My Documents'
+
+# specify where the files are going to
+# leave user and host empty for localhost
+dst_user=greg
+dst_host=10.199.1.36
+dst_dir=/More/Greg/Archives
+
+# specify whether src merges into dst or goes under dst
+merge=/			# / for merges into, nothing for copies under
+
+# some validity checks on src and dst components
+
+[ -n "$src_host" -a -n "$src_user" ] ||
+[ -z "$src_host" -a -z "$src_user" ] ||
+	die specify both source host and user or neither
+[ -n "$dst_host" -a -n "$dst_user" ] ||
+[ -z "$dst_host" -a -z "$dst_user" ] ||
+	die specify both destination host and user or neither
+[ -n "$src_host" -o -e "$src_dir" ] || die local $src_dir does not exist
+[ -n "$dst_host" -o -e "$dst_dir" ] || die local $dst_dir does not exist
+[ -z "$merge" -o / = "$merge" ] || die merge must be / or empty
+
+# add delimiters to src and dst components, assuming rsync ssh syntax
+[ -z "$src_user" ] || src_user="$src_user@"
+[ -z "$dst_user" ] || dst_user="$dst_user@"
+[ -z "$src_host" ] || src_host="$src_host:"
+[ -z "$dst_host" ] || dst_host="$dst_host:"
+
+# set src and dst
+
+src="$src_user$src_host$src_dir$merge"
+dst="$dst_user$dst_host$dst_dir$merge"
+
+# build option string along with explanations
+
+options=''			# options for rsync separated by spaces
+option_help=''			# explanation of options separated by #'s
+
+option() {			# add an option and its explanation
+  options="$options $1"
+  option_help="$option_help#$*"
+}
+
+# comment out, rather than delete, unwanted options
+# feel free to add more options from the manual
+# quote any options or explanations containing metacharacters
+
+option --rsh=ssh	transfer using ssh protocol
+option --update		skip files that are newer on the receiver
+option --hard-links     preserve hard links
+option --sparse         handle sparse files efficiently
+
+# option --archive	archive mode: same as these next eight options:
+option --recursive      recurse into directories
+option --links          copy symlinks as symlinks
+option --perms          preserve permissions
+option --times          preserve modification times
+option --group          preserve group
+option --owner          'preserve owner (super-user only)'
+# option --devices        'preserve device files (super-user only)'
+# option --specials       preserve special files
+
+option --verbose        increase verbosity
+option --compress       compress file data during the transfer
+
+[ true = "$confirm" -o false = "$confirm" ] || die confirm must be true or false
+
+"$confirm" && {
+    echo source: $src
+    echo destination: $dst
+    [ / = "$merge" ] && echo $src_dir will be merged into $dst_dir
+    echo options:
+    echo "$option_help" | tr '#' '\n' | sed 's/^/	/'
+    echo rsync $options "$src" "$dst"
+    echo -n "Continue? [no/yes] "
+    read ans junk
+    [ yes = "$ans" ] || { echo Allright then, bye! ; exit 0; }
+}
+
+rsync $options "$src" "$dst"

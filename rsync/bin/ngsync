@@ -1,0 +1,83 @@
+#!/bin/sh -u
+# J. Greg Davidson, February 2003
+# Copyright (c) 2003 NGender Consulting Group.
+
+# The program should be as self-documenting as possible.
+# These strings are printed by query methods below.
+program=`basename $0`		# Program knows it's own name
+version='$Id$'			# RCS will expand this
+#syntax="$program OPTION-SYNTAX ARGUMENT-SYNTAX"
+syntax="$program [-udn] [source_host:]source_dir [destination_host:]destination_dir"
+purpose="Synchronize source files to destination using rsync"
+usage="Usage: $syntax"
+help="$syntax\n\t-- $purpose"
+help="$help\n\t\t-u\tplace source directory under target directory"
+help="$help\n\t\t-d\tdelete files not on target"
+help="$help\n\t\t-n\tdry-run - don't actually do it"
+
+# Ensure the programs we run are the ones we think we're running:
+export PATH=/bin:/usr/bin
+
+# Aliases and shell functions - each a miniature shell script
+stderr() { >&2 echo "$*"; }
+die() { code=$1; shift; stderr "$@"; exit $code; }
+error() { code=$1; shift; die $code "$0 error: $*"; }
+die0() { echo -e "$@"; exit 0; }
+
+# Answer help and version queries
+case "${1:-}" in
+--help) die0 $help ;;
+--usage) die0 $usage ;;
+--version) die0 $version ;;
+esac
+
+#  Command line options
+
+options=-zlHS
+archive=a
+verbose=""
+recursive=r
+dry_run=""
+have_host=0
+
+while getopts "avnh:" myopt; do 
+    case "$myopt" in
+        a)	archive=a  ;;
+        v)	verbose=a  ;;
+        n)	dry_run=n ;;
+        h)	have_host=1 ; host=$OPTARG  ;;
+    '?')  die 1 $usage ;;
+    esac    
+done
+
+shift `expr $OPTIND - 1`
+
+# Do we have the minimum number of required arguments?
+[ $# -ge 1 ] || die 1 $usage
+
+# Process the arguments
+for f ; do
+
+  # Process current argument $f
+
+done
+
+exit 0
+
+#!/bin/sh
+home=10.252.1
+if [ $# = 0 ]; then
+	host=ngender.net
+elif [ $# = 1 ]; then
+	if expr "$1" : '[0-9]\{1,3\}$' >/dev/null; then
+		host="$home.$1"
+	else
+		host="$1"
+	fi
+else
+	>&2 echo "Usage: $0 [destination-host]"
+	exit 1
+fi
+options=$options$archive$verbose$recursive$dry_run
+echo rsync $options --rsh=ssh /home/httpd/ "$host:/home/httpd"
+rsync $options --rsh=ssh /home/httpd/ "$host:/home/httpd"
