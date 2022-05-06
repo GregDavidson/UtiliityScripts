@@ -1,0 +1,4 @@
+echo ""
+echo Mail Spool Files
+ls -s $HOME/mail | awk '$1 != 0 && $1 != "total"' | pr -w80 -l1 -t -4
+echo ""

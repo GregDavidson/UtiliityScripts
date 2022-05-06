@@ -1,0 +1,5 @@
+#!/bin/csh
+foreach f ($argv)
+  uucp -d -nkeith $f sol\!~uucp/$f
+  echo uucp -d -nkeith $f sol\!~uucp/$f
+end

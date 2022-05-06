@@ -1,0 +1,31 @@
+#!/bin/csh -f
+set noglob
+
+set l = "$<"
+while ("$l" != "")
+    switch ("$l")
+	case "Received: *":
+	case "Message-ID: *":
+	case "Status: *":
+	case "Path: *":
+	case "Relay-Version: *":
+	case "Posting-Version: *":
+	case "Date-Received: *":
+	case "References: *":
+	case "Lines: *":
+	case "Approved: *":
+	    set l = "$<"
+	    while ("$l" =~ "^	*")
+		set l = "$<"
+	    end #while
+	  breaksw
+	default:
+	    echo "$l"
+	    set l = "$<"
+	  breaksw
+    endsw
+end #while
+
+echo ""
+
+exec /bin/cat

@@ -1,0 +1,21 @@
+cd $HOME/mail
+
+if [ $# -lt 1 -o $# -gt 2 ]
+then
+    echo "Usage: $0 [$HOME/mail/]filename [pattern]"
+    exit 1
+fi
+
+if [ ! -f $1 ]
+then
+    echo "${0}: First argument $1 must be a file under $HOME/mail"
+    exit 2
+fi
+
+if [ $# -eq 1 ]
+then
+  grep '^Subject: ' $1 /dev/null | more
+elif [ $# -eq 2 ]
+then
+  grep '^Subject: ' $1 /dev/null | grep $2 | more
+fi
