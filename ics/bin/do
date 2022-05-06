@@ -1,0 +1,40 @@
+#!/bin/csh
+unset noclobber
+foreach f ($argv)
+    set g = $f:r
+
+    if ($f:e == c || $f:e == h) then
+	tgit $f
+	continue
+    endif
+
+    if ($f:e == ics) then
+	ics2tex $f
+	set f = $f:r.tex
+    endif
+
+    if ($f:e == tex) then
+	tex $f
+	while ($f:r != $f)
+	    set f = $f:r
+	end
+	set f = $f.dvi
+    endif
+
+    if ($f:e == dvi) then
+	dvi2ps $f >$g.ps
+	set f = $g.ps
+    endif
+
+    if ($f:e == ps) then
+
+ex - $f <<'EOF'
+/^%%EndProlog/a
+@landscape
+.
+wq
+'EOF'
+
+lpr -Pps $f
+    endif
+end

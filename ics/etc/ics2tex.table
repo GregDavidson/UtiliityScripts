@@ -1,0 +1,79 @@
+\Chapter 3. Indexed Data Structures
+% 		+ When To Use Recursion
+
+!1 Motivation & Capabilities
+
+o Tradition DP oriented towards batch processing of huge files.
+- Efficient sorting algorithms for large files can still take hours.
+- Faster hardware doesn't help much because the algorithms are not linear.
+- Interactive techniques disk intensive to protect against hardware failure.
+o Traditional PC processing has been oriented towards very small databases.
+- PC software often based on linear search.
+- Algorithms very RAM oriented for speed.
+o Many algorithms exist to improve small computer search & sort times.
+- Most in-RAM techniques keep the data in some kind of tree.
+- Powerful DBM packages now exist for large disk-based databases.
+
+!1 Designing the Interface
+
++c indexed.h
+
+!1 Choosing a Data Structure
+
+!2 Binary Trees
+
+!3 About Binary Trees
+
++d bintree
+
+!3 Private Declarations and Functions
+
++c bintree.h
+
++c bintree1.c
+
+!4 The rest of the Functions
+
++c bintree2.c
+
+!2 Balanced Trees
+
+!3 Danger of Imbalance
+
+o Simple binary trees ideal when data is randomized
+- Tree height small, tree breadth large
+o Partially sorted data causes severe problems
+- In worst case, performance same as linear list search.
+o Rebalancing trees is very expensive
+o A different datastructure is needed.
+
+!3 How Balanced Trees Work
+
++d baltree
+
+!3 Implementing Balanced Trees
+
+!4 Private Declarations and Functions
+
+!4 Balanced Tree Lookup
+
++c lookup.c
+
+!4 Balanced Tree Insertion
+
++c insert.c
+
+!4 Balanced Tree Deletion
+
++c delete.c
+
+!1 Exercise: Implementing Name/Record facility
+
+o Write a program to process transactions of three kinds
+- Enter a string with an index (also a string)
+- Lookup a string by its index
+- Delete a string by its index
+o Create an audit trail on a temporary file
+- Append to the temporary file if it already exists
+- Use the \C{fsync} systems call to protect each transaction
+

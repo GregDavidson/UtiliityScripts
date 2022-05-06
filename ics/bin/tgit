@@ -1,0 +1,12 @@
+#!/bin/csh
+foreach f ($argv)
+
+    tgrind -f $f >$f.tex
+
+    ex - $f.tex <<'EOF'
+1,2d
+$d
+wq
+'EOF'
+
+end

@@ -1,0 +1,13 @@
+/<--end-->/,/<--page-->/d
+s/{pgm/{bold/g
+s/{command/{courier/g
+s/{key/{bold-courier/g
+s/{fun/{courier/g
+s/{func/{courier/g
+s/{code/{courier/g
+s/{fname/{bold-italics/g
+s/{name/{bold-italics/g
+s/{op/{bold-courier/g
+s/{type/{bold/g
+s/{var/{courier/g
+s/{par/{courier/g

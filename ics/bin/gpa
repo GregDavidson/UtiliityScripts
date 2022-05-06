@@ -1,0 +1,2 @@
+#!/bin/csh -f
+awk -f ~greg/sw/ics/etc/gpa.awk $*

@@ -1,0 +1,64 @@
+#!/bin/csh
+
+set nonomatch
+set p = 'ics2test:'
+
+if (-d test) /bin/rm -r test
+mkdir test
+
+if (-d test2) /bin/rm -r test2
+mkdir test2
+
+if (-d test1) then
+    set tops = (test1/*)
+    if ("$tops[1]" == 'test1/*') then
+	echo $p "No top files in test1\!"
+	set tops = ()
+    endif
+else
+	set tops = ()
+endif
+
+foreach f ($tops)
+    touch test2/$f:t
+end
+
+(chdir test2 ; ics2c ) < $1
+
+foreach f ($tops)
+    if (-z test2/$f:t) then
+	echo $p error: test2/$f:t is  empty\!
+    else
+	cp $f test
+    endif
+end
+
+set middles = (test2/*)
+if ("$middles[1]" == 'test2/*') set middles = ()
+
+foreach f ($middles)
+    if (! -f test/$f:t) then
+	cp $f test
+    else
+	cat $f >>test/$f:t
+    endif
+end
+
+if (-d test3) then
+    set bottoms = (test3/*)
+    if ("$bottoms[1]" == 'test3/*') set bottoms = ()
+else
+    set bottoms = ()
+endif
+    
+
+foreach f ($bottoms)
+    if (! -f test2/$f:t || -z test2/$f:t) then
+	echo test error: file test2/$f:t does not exist\!
+    else
+	cat $f >>test/$f:t
+    endif
+end
+
+echo test files constructed:
+ls test

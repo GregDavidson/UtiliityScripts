@@ -1,0 +1,22 @@
+#!/bin/csh
+set m4 = /usr/5bin/m4
+unset noclobber
+foreach f ($argv)
+    unset save delete
+    set r1=$f:r e1=$f:e
+    if ($e1 == m4) then
+	if (-e $r1) then
+	    set save=$r1.$$
+	    /bin/mv $r1 $save
+	endif
+	$m4 -Dfor_exer $f >$r1
+	set f = $r1 delete
+    endif
+    tgrind -f $f | sed -e 1d -e '$s|.*|\\vfill|' >${f}-exer.tex
+    if ($?save) then
+	/bin/mv $save $f
+    endif
+    if ($?delete) then
+	/bin/rm $f
+    endif
+end

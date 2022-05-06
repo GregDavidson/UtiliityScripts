@@ -1,0 +1,12 @@
+#!/bin/csh
+set m4 = /usr/5bin/m4
+unset noclobber
+foreach f ($argv)
+    set r1=$f:r e1=$f:e
+    if ($e1 != m4) then
+	echo $0: $f isn\'t an m4 file\!
+	continue
+    endif
+	$m4 -Dfor_soln $f >$r1
+    endif
+end

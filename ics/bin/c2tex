@@ -1,0 +1,8 @@
+#!/bin/csh
+foreach f ($*)
+  if ($f:e == h || $f:e == c) then
+      tgrind -f $f | sed -e 1d -e '$d' >$f.tex
+  else
+      echo "$0": $f ignored '(.c or .h expected)'
+  endif
+end

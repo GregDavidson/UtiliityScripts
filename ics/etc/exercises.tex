@@ -1,0 +1,74 @@
+\input /home/greg/bin/ics/tgrind-exer
+
+\newcount\exernum \exernum=0
+
+\def\ExerMode{
+	\parskip=\medskipamount
+	\parindent=0pt
+}
+	
+\font\fC=cmr7
+
+\def\Chapter#1{\def\MyChap{#1}\exernum=0}
+
+\def\In{\parindent=.25in}
+\def\InIn{\parindent=.50in}
+
+\def\Exercise#1{
+	\EndExercise
+	\global\advance\exernum by1
+	\ExerMode
+	\headline={
+		\ \ \ \ \ \ \ \ \ \ \ \ 
+		\hss \bf #1
+		\hss \rm Exercise \number\MyChap$.$\number\exernum
+	}
+	\footline={\ICSfoot}
+}
+%		Chapter \number\MyChap, Exercise \number\exernum: #1
+
+\def\OptionalExercise#1{
+	\EndExercise
+	\headline={\hss\bf #1 \sl (Optional) \hss}
+	\footline={\ICSfoot}
+}
+
+\def\EndPage{\vfil\eject}
+\def\EndExercise{\EndPage}
+
+\def\EndExercises{\EndExercise\end}
+\def\End{\EndExercises}
+
+\def\Cfile #1
+{
+	\EndPage
+	\GrindMode
+	\input #1
+	\ExerMode
+}
+
+\def\Cinline #1
+{
+	\GrindMode
+	\input #1
+	\ExerMode
+}
+
+\def\ICSfoot{
+	\hss
+	{\fC	$\copyright$ Copyright
+		Integrated Computer Systems.
+		Not to be reproduced without prior written consent.
+		All rights reserved.
+	}
+	\hss
+	{\tenrm \ \folio}
+}
+
+\def\VISfoot{\FileName\hss
+    {\fC
+        Copyright $\copyright$ 1987 by Virtual Infinity Systems.
+	All rights reserved.
+    }
+    \hss{\tenrm \ \folio\quad}
+}

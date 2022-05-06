@@ -1,0 +1,142 @@
+\special{landscape}
+
+% Available Sans Serif Fonts:
+% cmss10 cmss12 cmss17 cmss8 cmss9
+% cmssbx10 cmssdc10
+% cmssi10 cmssi12 cmssi17 cmssi8 cmssi9
+% cmssq8 cmssqi8
+
+% General fonts for slides:
+\font\tenrm=cmss10 scaled\magstep2
+\font\tenbf=cmssbx10 scaled\magstep2
+\font\teni=cmssi10 scaled\magstep3
+\font\tentt=cmtt10 scaled\magstep2
+\font\tenit=cmti10 scaled\magstep2
+\font\tensl=cmsl10 scaled\magstep2
+
+% Special fonts for slides
+\def\fB{\bf}
+\def\fD{\rm}
+\font\fS=cmssbx10 scaled\magstep3
+\font\fC=cmr7
+
+% Special fonts for tgrind
+\font\sevenrm=cmr7                      % font for right margin line numbers
+\font\twelvebf=cmbx10 scaled \magstep1  % font for page headers
+\font\forteenrm=cmr10 scaled \magstep2  % font for right margin proc names
+
+% Page placement, sizes and style
+\voffset=68pt
+\hoffset=0in
+\vsize=5.75in
+\hsize=9in
+\parindent=3pc
+\raggedright
+\pretolerance=10000	% No hyphenation
+
+% Set up headers and footers
+
+\def\noICSpaper{\def\maybe{\hrulefill}\def\FootLine{\ICSfoot}}
+\def\ICSpaper{\def\maybe{\hss}\def\FootLine{\noICSfoot}}
+
+\def\makeheadline{
+    \vbox to 0pt{
+	\vskip-102pt
+	\line{\vbox to 20pt{}\maybe}
+        \line{\vbox to 35pt{}\fS \hss\TitleLine\hss}
+	\line{\vbox to 20pt{}\maybe}
+	\vss
+    }
+    \nointerlineskip
+}
+	
+\footline={\FootLine}
+
+\def\MyChap{?}
+\gdef\FileName{}
+
+\def\ICSfoot{\hrulefill
+    {\fC Copyright $\copyright$ 2001
+	NGender Consulting Group.
+	All rights reserved.}
+    \hrulefill{\tenrm \ \MyChap-\folio}}
+
+\def\noICSfoot{\hss{\tenrm \ \MyChap-\folio\quad}}
+
+\def\VISfooter{\FileName\maybe
+    {\fC
+        Copyright $\copyright$ 1987
+	by Virtual Infinity Systems.
+	All rights reserved.
+    }
+    \maybe{\tenrm \ \MyChap-\folio\quad}
+}
+
+% Setup macros to begin and title new pages
+
+\def\SectionNote#1#2{\vskip 10pt\B (#1) #2\par}
+
+\def\Chapter#1#2{\def\MyChap{#1}\NewTitle{Chapter #1.  #2}\ \par}
+\def\Section#1#2{\EndFrame\NewTitle{#2}}
+\def\NewTitle#1{\def\TitleLine{#1}\def\ContTitle{#1 (con't)}}
+\def\EndFrame{\par\vfil\vfil\eject\footline={\FootLine}\vfil}
+
+% Macros for slide lines:
+
+\def\ppSkip{\vfil}
+
+\def\P{\ppSkip\noindent\fB\par}
+\def\B#1{\ppSkip\item{$\bullet$\quad}{\fB #1\par}}
+\def\N#1{\ppSkip\item{$\bullet$\quad}{\fB #1\par}}
+\def\D{\vskip 10pt\itemitem{{\bf--}\quad}\fD}
+\def\C#1{{\tt #1}}
+
+% Including C code:
+
+\outer\def\Cfile#1/{
+    \footline={\VISfooter}
+      {
+	\ppSkip
+	\input /home/greg/bin/ics/tgrindmac.tex
+	\hoffset=3pc
+	\input #1.tex
+	\hoffset=0pc
+      }
+}
+\outer\def\Outfile#1/{
+      {
+	\listing{#1}
+      }
+}
+
+\def\listing#1{\par\begingroup\setupverbatim\input#1 \endgroup}
+\def\setupverbatim{\tt
+	\def\par{\leavevmode\endgraf} \catcode`\`=\active
+	\obeylines \uncatcodespecials \obeyspaces}
+{\obeyspaces\global\let =\ } % let active space = control space
+\def\uncatcodespecials{\def\do##1{\catcode`##1=12 }\dospecials}
+
+\def\myexample{\vskip10pt\begingroup\tt\uncatcodespecials
+	\obeyspaces\doverbatim}
+\newcount\balance
+{
+  \catcode`<=1 \catcode`>=2 \catcode`\{=12 \catcode`\}=12
+  \gdef\doverbatim{<\balance=1\verbatimloop>
+  \gdef\verbatimloop#1<\def\next<#1\verbatimloop>%
+    \if#1{\advance\balance by1
+    \else\if#1}\advance\balance by-1
+    \ifnum\balance=0\let\next=\endgroup\fi\fi\fi\next>>
+
+% Fonts for embedded emphasis
+
+\def\ittem #1/{\item{{\tt #1}}}
+\def\cc #1/{\S{}\'#1\'\SE{}}
+
+% Translations of dangerous characters:
+
+\def\slash/{/}
+\def\\{$\backslash$}
+
+% Setup:
+
+\noICSpaper

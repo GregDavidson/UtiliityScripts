@@ -1,0 +1,87 @@
+% magsteps?
+% cmss10 cmss12 cmss17 cmss8 cmss9
+% cmssbx10 cmssdc10
+% cmssi10 cmssi12 cmssi17 cmssi8 cmssi9
+% cmssq8 cmssqi8
+
+\font\tenrm=cmss10 scaled\magstep2
+\font\tenbf=cmssbx10 scaled\magstep2
+\font\teni=cmssi10 scaled\magstep2
+\font\tentt=cmtt10 scaled\magstep2
+\font\tenit=cmti10 scaled\magstep2
+\font\tensl=cmsl10 scaled\magstep2
+
+%\font\fB=cmssbx10 scaled\magstep2
+%\font\fD=cmss10 scaled\magstep2
+%\font\fS=cmssbx10 scaled\magstep3
+%\font\fC=cmr5
+
+\def\fB{\bf}
+\def\fD{\rm}
+\font\fS=cmssbx10 scaled\magstep3
+\font\fC=cmr5
+
+\voffset=0
+\hoffset=0
+\vsize=6.2in
+\hsize=9.25in
+\parindent=2pc
+\raggedright
+
+\def\MyChap{?}
+
+\def\ICSfooter{\hrulefill
+    {\fC $\copyright$ Copyright 2001
+	NGender Consulting Group.
+	Not to be reproduced without prior written consent.
+	All rights reserved.}
+    \hrulefill\MyChap$-$\folio}
+
+\def\VISfooter{\hrulefill
+    {\FileName\fC Copyright $\copyright$ 2001
+	 by Virtual Infinity Systems.
+	 All rights reserved.}
+    \hrulefill\MyChap$-$\folio}
+
+\def\Setup{\headline={\hrulefill}
+  \footline={\ICSfooter}
+}
+
+\Setup
+
+\def\SectionNote#1#2{\vskip 10pt\B (#1) #2\par}
+
+\def\Chapter #1. #2/{\def\MyChap{#1}{\fS\centerline{Chapter #1. #2}}\par}
+\def\Section #1. #2/{\EndFrame\Setup\BeginFrame{#1}{#2}\par}
+\def\Title#1#2{\line{\hss{\fS #2}\hss}\par}
+\def\BeginFrame#1#2{
+	\vskip 20pt
+	\Setup
+	\Title{#1}{#2}
+	\vskip 20pt
+	\hrule
+}
+\def\EndFrame{\vfil\eject}
+
+\def\ppSkip{\vfil}
+
+\def\P{\ppSkip\noindent\fB\par}
+\def\B#1{\ppSkip\item{$\bullet$}{\fB #1\par}}
+\def\N#1{\ppSkip\item{$\bullet$}{\fB #1\par}}
+\def\D{\vskip 10pt\itemitem{---}\fD}
+\def\C#1{{\tt #1}}
+
+\def\FileName{}
+\outer\def\Cfile#1/{
+    \footline={\FileName\VISfooter}
+  {
+	\input /home/greg/SW/ics/etc/tgrindmac.tex
+	\input #1.tex
+  }
+}
+
+\def\ittem #1/{\item{{\tt #1}}}
+\def\cc #1/{\S{}\'#1\'\SE{}}
+
+\def\slash/{/}
+\def\\{$\backslash$}

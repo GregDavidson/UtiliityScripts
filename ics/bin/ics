@@ -1,0 +1,20 @@
+#!/bin/csh
+unset noclobber
+foreach f ($argv)
+    set g = $f:r
+
+    if ($f:e == ics) then
+	ics2me $f >$f:r.me
+	set f = $f:r.me
+    endif
+
+    if ($f:e == me) then
+	groff -Tascii -me ~greg/sw/ics/etc/ics.me $f > $f:r.crt
+	set f = $f:r.crt
+    endif
+
+    if ($f:e == crt) then
+	expand $f | sed '/<--end-->/,/<--page-->/d' > $f:r.out
+	(echo . ; echo y) >> $f:r.out
+    endif
+end

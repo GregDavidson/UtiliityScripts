@@ -1,0 +1,65 @@
+% Replace with good sans serif fonts when available
+%\font\fB=amss10
+%\font\fD=amssq8
+%\font\fS=amssbx10
+%\font\fC=amr5
+
+\font\fB=amb10
+\font\fD=amr10
+\font\fS=amb10
+\font\fC=amr5
+
+\voffset=1.25in
+\hoffset=1.5in
+\vsize=4in
+\hsize=6in
+\parindent=2pc
+\raggedright
+
+\def\ICSfooter{\hrulefill
+    {\fC $\copyright$ Copyright
+	Integrated Computer Systems.
+	All rights reserved.}
+    \hrulefill\folio}
+
+\def\VISfooter{\hrulefill
+    {\fC Copyright $\copyright$ 1987
+	 Virtual Infinity Systems.
+	 All rights reserved.}
+    \hrulefill\folio}
+
+
+\def\Setup{\headline={\hrulefill}
+  \footline={\ICSfooter}
+}
+
+\Setup
+
+\def\SectionNote#1#2{\vskip 10pt\B (#1) #2\par}
+
+\def\Chapter #1. #2/{{\fS\centerline{Chapter #1. #2}}\par}
+\def\Section #1. #2/{\EndFrame\Setup\BeginFrame{#1}{#2}}
+\def\Title#1#2{\line{(#1)\hss{\fS #2}\hss}\par}
+\def\BeginFrame#1#2{\vskip 20pt\Setup\Title{#1}{#2}\vskip 30pt}
+\def\EndFrame{\vfill\eject}
+
+\def\P{\noindent\fB\par}
+\def\B#1{\vskip 10pt\item{$\bullet$}{\fB #1\par}}
+\def\N#1{\vskip 10pt\item{$\bullet$}{\fB #1\par}}
+\def\D{\vskip 10pt\itemitem{---}\fD}
+\def\C#1{{\tt #1}}
+
+\def\FileName{}
+\outer\def\Cfile#1/{
+    \footline={\FileName\VISfooter}
+  {
+	\input /home/greg/bin/ics/tgrindmac.tex
+	\input #1
+  }
+}
+
+\def\ittem #1/{\item{{\tt #1}}}
+\def\cc #1/{\S{}\'#1\'\SE{}}
+
+\def\slash/{/}
+\def\\{$\backslash$}

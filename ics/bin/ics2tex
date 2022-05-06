@@ -1,0 +1,8 @@
+#!/bin/csh
+foreach f ($*)
+  if ($f:e == ics) then
+      sed -f ~greg/SW/ics/etc/ics2tex.sed $* >$f:r.tex
+  else
+      echo "$0": $f ignored '(.ics expected)'
+  endif
+end

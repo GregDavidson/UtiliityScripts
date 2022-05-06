@@ -1,0 +1,51 @@
+\voffset=-.8in
+\hoffset=-.8in
+\vsize=5in
+\hsize=5in
+\parindent=2pc
+\raggedright
+
+\def\Setup{\headline={\hrulefill}
+  \footline={Copyright $\copyright$ 1987\ 
+	     Integrated Computer Systems\hrulefill\folio}
+}
+
+\Setup
+
+\def\P{\noindent}
+\def\C #1. #2/{\centerline{Chapter #1. #2}\par}
+\def\S #1. #2/{\SectionNote{#1}{#2}}
+\def\F #1. #2/{\NewFrame{#1}{#2}}
+\def\E{\eject}
+
+\def\C#1{{\tt #1}}
+
+\def\SectionNote#1#2{\vskip 10pt\B (#1) #2\par}
+\def\SectionTitle#1#2{\line{(#1)\hss#2\hss}\par}
+\def\NewFrame#1#2{\vskip 20pt\Setup\SectionTitle{#1}{#2}\vskip 30pt}
+
+\def\B{\vskip 10pt\item{$\bullet$}}
+\def\D{\vskip 10pt\itemitem{---}}
+
+% \def\cskip{\par\vskip .5cm}
+% \outer\def\Cfile#1/{
+%	\cskip
+%	\noindent
+%	The file {\bf #1}:
+%	\vskip .2cm
+%	\input #1.tex
+% }
+
+\outer\def\Cfile#1/{
+  {
+    \footline={Copyright $\copyright$ 1987\ 
+	Virtual Infinity Systems\hrulefill\folio}
+	\input #1.tex
+  }
+}
+
+\def\ittem #1/{\item{{\tt #1}}}
+\def\cc #1/{\S{}\'#1\'\SE{}}
+
+\def\slash/{/}
+\def\\{$\backslash$}

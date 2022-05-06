@@ -1,0 +1,10 @@
+#!/bin/csh
+set f = $argv[$#argv]
+expand $* | unexpand \
+ | ics2web \
+ | ics2me  \
+ | groff -Tascii -me \
+ | sed -f ~greg/sw/ics/etc/ics2out.sed \
+ > $f:r.out
+#echo . >>$f:r.out
+#echo y >>$f:r.out
