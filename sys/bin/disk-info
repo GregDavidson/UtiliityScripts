@@ -1,0 +1,59 @@
+#!/usr/bin/ksh
+
+print "Disk Information for host `hostname` at \c"
+
+proc_partitions() { cat /proc/partitions | awk 'NR>2&&$3>1{print $1 "," $2, $3, $4}' | sort +2; }
+dev_mapper() { ls -l /dev/mapper | awk '/^b/{print $5 $6, $10}' | sort +2; }
+show_partitions() {
+  proc_partitions > $join1 &
+  dev_mapper | join -a 1 -e '*' $join1 - | awk '{print $NF, $2}' | sort
+}
+dev_dirs() { sed -n -e '/^\/dev\/mapper\//s///p' -e '/^\/dev\//s///p'; }
+show_mount() { mount | dev_dirs | awk '{print $1, $3, $5, $6}' | sort; }
+show_df() {
+  df -hl | awk 'NF==1{name=$1}NF==5{print name, $0}NF==6{print}' |
+  dev_dirs | awk '{print $1, $2, $3, $4, $5, $6}' | sort
+}
+show_partitions_plus() {
+  show_partitions > $join2 &
+  show_df | join -a 1 -e '*' $join2 - |
+  awk '
+    BEGIN{
+      format1="%16s"; format2="%8s"; format3="%16s%8s%8s%8s\n"; scale="K" ; k=1024.0
+      format2b="%7.0f%1s"
+      format0=format1 format2 format3; scale="K" ; k=1024.0
+      printf format0, "DEVICE", "SIZE", "MOUNT", "USED", "Avail", "%USED";
+    }
+    {
+      size=$2; range=scale
+      if (size > k) { size /= k; range="M" }
+      if (size > k) { size /= k; range="G" }
+    }
+    NF==2{
+      printf format1 format2b "\n", $1, size, range
+    }
+   NF==7{
+     printf format1 format2b format3, $1, size, range, $7, $4, $5, $6
+   }'
+}
+
+echo Sunday:Monday:Tuesday:Wednesday:Thursday:Friday:Saturday January:February:March:April:May:June:July:August:September:October:November:December `date '+%r %w:%d:%m:%y'` |
+awk '{
+  OFS=", "
+  split($1,day,":")
+  split($2,month,":")
+  split($3,time,":")
+  if ($4 == "AM") meridian = "a.m."
+  else meridian = "p.m."
+  split($5,date,":")
+  print (time[1]+0) ":" time[2] " " meridian, day[date[1]+1], (date[2]+0) " " month[date[3]+0] " " (date[4]+2000)
+}'
+echo ""
+
+pgm=`basename $0`
+join1=/tmp/pgm-join1-$$
+join2=/tmp/pgm-join2-$$
+mkfifo $join1 $join2
+trap "rm $join1 $join2" 0 1 2 15
+
+show_partitions_plus

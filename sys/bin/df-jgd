@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# This script works by piping df into an awk script
+# which presents it nicely.  There is no reliable
+# way with a Posix O/S to find installation directories!
+# Let's try to find out where we were installed and
+# try to find our awk script.
+
+set -x
+lib_fallback=$HOME/SW/sys/Lib
+name_fallback=df-jgd.awk
+
+pgm_name="${0##*/}"
+case "$0 " in
+    (*/*) pgm_dir="${0#/*}" ;;
+    (*) pgm_dir="." ;;
+esac
+
+for d in "$pgm_dir" "$lib_fallback"; do
+    for f in "${pgm_name}.awk" "${name_fallback}.awk"; do
+	[ -f "$d/$f" -a -x "$d/$f" ] && break 2
+    done
+done
+[ -f "$d/$f" -a -x "$d/$f" ] || { >&2 echo "$0 error: Can't find script" ; exit 1; }
+
+df | awk -f "$d/$f"
