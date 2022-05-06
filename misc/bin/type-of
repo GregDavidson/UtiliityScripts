@@ -1,0 +1,43 @@
+#!/bin/bash
+script_name=${0##*/}		# strip off directory path
+# these functions work better if added to the working shell
+
+type_of_usage() {
+    [ "$#" != 0 -a 0 != "$1" ] && return 1
+    echo "Usage: $script_name command-name ..."
+    return 0
+}
+
+type_of_help() {
+    [ X"--help" != X"$1" ] && return 1
+    type_of_usage
+    echo "$script_name purpose: list information about these commands"
+    return 0
+}
+
+type_of() {
+    local script_name='type-of'
+    type_of_usage "$#" && return 1
+    type_of_help "$1" && return 0
+    local prog_name
+    for prog_name; do
+	echo -n "$script_name $prog_name"
+	local prog_file=`type -P "$prog_name"`
+	[ -n "$prog_file" ] && {
+	    echo -n " file $prog_file"
+	    local prog_rpm=`2>/dev/null rpm -qf "$prog_file"`
+	    [ $? ] || echo -n " rpm $prog_rpm"
+	}
+	local prog_type=`type -t "$prog_name"`
+	case "$prog_type" in
+	    ('') echo " unknown!" ;;
+	    ('file') echo '' ;;
+	    ('alias') echo " `alias "$prog_name"`" ;;
+	    (*) echo " $prog_type" ;;
+	esac
+    done
+}
+
+type_of_usage "$#" && exit 1
+type_of_help "$1" && exit 0
+type_of "$@"

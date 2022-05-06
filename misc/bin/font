@@ -1,0 +1,74 @@
+#!/bin/csh -f
+#Author: J. Greg Davidson
+
+if (! $?fontdirs) then
+	set fontdirs = (~/etc/fonts /usr/lib/fonts/fixedwidthfonts)
+endif
+
+set noglob
+set ints = (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)
+
+set args = ()
+foreach x ($argv)
+	set word = $x exts = ()
+	while ($word != $word:r)
+		set exts = ($word:e $exts) word = $word:r
+	end
+	set args = ($args $word $exts)
+end
+
+set name = screen style = r size = 7
+
+foreach phase (style size)
+
+	switch ($phase)
+		case style:
+			set nn  = (roman bold r b)
+			set vv  = (r b)
+			set var = style
+	    	breaksw
+		case size:
+set nn = (tiny small medium big huge 7 8 9 10 12 13 14 15 16 17 18 19 )
+set vv = (7 9 12 14 16)
+			set var = size
+	    	breaksw
+	endsw
+
+	foreach i ($ints[1-$#args])
+		set a = $args[$i]
+		foreach j ($ints[1-$#nn])
+			if ($a == $nn[$j]) then
+				set args[$i] = ''
+				if ($j <= $#vv) then
+					set $var = $vv[$j]
+				else
+					set $var = $nn[$j]
+				endif
+				break ; break
+			endif
+		end
+	end
+	set args = ($args)
+end
+
+if ($#args) then
+	set name = $args[1]
+	set args = ($args[2-])
+endif
+
+set q = \'
+
+if ($#args) echo echo font: extra info: $q$args$q \;
+
+set f = $name.$style.$size
+
+foreach d ($fontdirs)
+	if (-f $d/$f) then
+		echo echo font: $d/$f \;
+		echo setenv DEFAULT_FONT $d/$f \;
+		set foundit
+		break
+	endif
+end
+
+if (! $?foundit) echo echo font: font $q$f$q not found \;

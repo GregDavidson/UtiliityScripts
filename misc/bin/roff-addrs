@@ -1,0 +1,6 @@
+LIB=$HOME/SW/misc/lib/roff-addrs
+sed         -f $LIB.sed $* |
+sed 1d |
+awk         -f $LIB.awk - |
+groff -P-l -me $LIB-3.tmac - |
+lpr

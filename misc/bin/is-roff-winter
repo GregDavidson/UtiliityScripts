@@ -1,0 +1,1 @@
+(file $1 | grep 'roff.*text' >/dev/null && grep 'Winter' $1 ) >/dev/null 2>&1

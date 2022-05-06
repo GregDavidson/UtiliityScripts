@@ -1,0 +1,10 @@
+#!/bin/sh
+if [ -z "$DISPLAY" ]; then
+  echo "$0:" 'No $DISPLAY!' >&2
+  exit 1
+fi
+
+while true; do
+  xset dpms force suspend
+  sleep 60
+done

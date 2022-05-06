@@ -1,0 +1,19 @@
+:
+#duped - report the files which are the same
+find "$@" -type f -exec ls -l {} \; | sort -n |
+awk '
+function dedup(f1, f2) {
+    q = "\""
+    f1=q f1 q
+    f2=q f2 q
+    f1f2=f1 " " f2
+    cmp="cmp -s " f1f2
+    rm="rm " f2
+    ln="ln " f1f2
+    print "dedup " f1f2
+    if ( !system(cmp) && !system(rm) && !system(ln) ) {
+    }
+}
+$5==last_size{ dedup(last_name, $9) }
+{last_size=$5 ; last_name=$9}
+'

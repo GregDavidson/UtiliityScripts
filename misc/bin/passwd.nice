@@ -1,0 +1,2 @@
+#!/bin/sh
+awk -F: '{sub(/.*\//,"",$7); printf "%4d%4d %-10s %-8s %-20s %s\n", $3,$4,$1,$7,$6,$5}' /etc/passwd | sort -n

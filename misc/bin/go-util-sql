@@ -1,0 +1,20 @@
+#!/bin/bash
+simple_require pathvar
+usage="Usage: $0 [working-dir]"
+mydir=Shared/Lib/SQL/Util-SQL
+mybin=Shared/Bin
+if [ -n "$1" -a -d "$1" ]; then
+  go_dir="$1"
+elif [ $# -eq 0 ]; then
+  go_dir="$mydir"
+else
+  echo $usage
+  exit 2
+fi
+. pg-local start
+cd $go_dir
+go_bin="$mybin"
+[ -n "$go_bin" ] && pathvar_add PATH -d. -a "$go_bin"
+go_title="Go ${go_dir##*/} $*"
+emacs-jgd "${@:-.}" -title "$go_title"
+

@@ -1,0 +1,7 @@
+echo ""
+echo ""
+echo ""
+echo ""
+echo ""
+cal $* | sed -f /home/greg/bins/misc/monthview.sed |
+         sed -f /home/greg/bins/misc/monthview.sed2

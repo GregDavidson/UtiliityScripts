@@ -1,0 +1,10 @@
+#!/bin/csh
+foreach f ($argv)
+  if ($f:e == C) then
+    uncompact $f
+    set f = $f:r
+  endif
+  set t = `file $f`
+  set s = `ls -s $f`
+  if ($t[$#t] == text && $s[1] > 1) /local/bin/compress/compress $f
+end

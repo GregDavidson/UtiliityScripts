@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# KRB5CCNAME=$USER
+# export KRB5CCNAME
+
+header="--header='%W|\$N|Page \$% of \$='"
+footer="--footer='Copyright (c) `date +%Y`, J. Greg Davidson, All rights reserved'"
+media="--media=Letter"
+margins="--margins='36:36::'"
+
+options="$header $media $margins"
+
+for f; do
+		case "$f" in
+				--jgd)
+						options="$options $footer" ;;
+				-*)
+						options="$options $f" ;;
+				*)
+						case "${f##*.}" in
+								[hc]) lang=c	;;
+								awk) lang=awk	;;
+								sh) lang=sh	;;
+								bash) lang=bash	;;
+								ksh) lang=ksh	;;
+								hpp|H|h++|hxx|cpp|C|c++|cxx) lang=cpp	;;
+								el) lang=elisp	;;
+								hc) lang=haskell	;;
+								[hH][tT][mM]|[hH][tT][mM][lL]|x[hH][tT][mM][lL]) lang=html	;;
+								js) lang=javascript	;;
+								java) lang=java	;;
+								Make*) lang=makefile	;;
+								me) lang=nroff	;;
+								scm) lang=scheme	;;
+								sql) lang=sql		;;
+								tcl) lang=tcl		;;
+								*) lang=''; echo "$0 warning: No language identified for $f" >&2  ;;
+						esac
+
+						case "$lang" in
+								'') highlight='' ;;
+								*)	highlight="--highlight=$lang" ;;
+						esac
+						
+						echo enscript $highlight $options "$f" >&2
+						enscript $highlight $options "$f"
+						;;
+		esac
+
+done

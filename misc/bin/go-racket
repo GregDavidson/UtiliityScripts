@@ -1,0 +1,8 @@
+#!/bin/bash
+racket=/usr/local/racket
+play=$HOME/Play/Lang/Lisps/Racket
+simple_require paths
+path_add $racket/bin
+manpath_add $racket/man
+cd "$play"
+drracket &

@@ -1,0 +1,1 @@
+sed 's/^	/x	/' | awk '{total+=$3}END{print total}'

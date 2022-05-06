@@ -1,0 +1,28 @@
+#!/bin/sh
+usage="$0 [-e] [-d dir] [-f filename] [key...]"
+#grabdir0=$HOME/Lib/grab
+grabdir0=$HOME/Personal/Folks/addresses
+grabdir1="${grabdir:-$grabdir0}"
+file="people"
+edit=""
+grab_sed="$HOME/SW/misc/lib/grab.sed"
+while getopts ":d:ef:" opt; do
+	case "$opt" in
+		d)	grabdir1="$OPTARG" ;;
+		e)	edit=yes ;;
+		f)	file="$OPTARG" ;;
+	      '?')	2>&1 echo usage: "$usage"
+			exit 2   ;;
+	esac
+done
+shift `expr $OPTIND - 1`	# now just filename args are left
+
+cd "$grabdir1"
+if [ -n "$edit" ]; then
+	pattern="$1"
+	${EDITOR:-vi} "+/$pattern" "$file"
+fi
+for pattern in "$@"; do
+	awk 'BEGIN{RS="" ; FS="\n" }'"/${pattern}/" "$file" |
+		sed -f "$grab_sed"
+done

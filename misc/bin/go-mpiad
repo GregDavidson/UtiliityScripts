@@ -1,0 +1,37 @@
+#!/bin/bash
+# . go-mpiad [files-to-edit]...
+# Mastering PostgreSQL in Application Development
+#Purpose: setup paths, start postgres, cd to working dir, start emacs
+
+msg() { >&2 printf '%s\n' "$*"; }
+warn() { msg "`script_name` warning: $*"; }
+
+set -xv
+module_name=go-mpiad		# needs to be name of this script!
+
+go_mpiad_once=true
+while "$go_mpiad_once"; do
+go_mpiad_once=false
+
+simple_require paths || { warn simples; break; }
+
+go_mpiad_path=`which "$module_name"`
+[ -f "$go_mpiad_path" ] || { warn script path ; break; }
+
+go_mpiad_dir="$HOME/Notes/Projects/MPiAD/"
+cd "$go_mpiad_dir" ||  { warn play dir $go_mpiad_dir ; }
+
+for d in /usr/local/SW/pgsql/bin; do
+	[ -d "$d" ] && pathvar_add PATH -d. -a "$d" ||
+		{ warn pgsql bin ; break; }
+done
+		
+. pg-control start || { warn pg-control ; }
+
+go_title="${module_name}  $*"
+unset module_name
+emacsclient -c -n --alternate-editor='' "${@:-.}"
+
+done
+
+set +xv

@@ -1,0 +1,6 @@
+case $# in
+2) file $1 | grep text ;;
+3) file $1 | grep "${2}" ;;
+4) file $1 | grep "${2}"  && grep "${3}" $1 ;;
+*) Usage: $0: filename [type-pattern] [content-pattern] >/dev/tty ; exit 2 ;;
+esac >/dev/null 2>&1

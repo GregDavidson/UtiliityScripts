@@ -1,0 +1,15 @@
+#!/bin/csh -f
+set echo verbose
+set dys = (sun mon tue wed thu fri sat)
+set DYS = (SUN MON TUE WED THU FRI SAT)
+set days = (sunday monday tuesday wednesday thursday friday saturday)
+set Days = (Sunday Monday Tuesday Wednesday Thursday Friday Saturday)
+set mon = (jan feb mar apr may jun jul aug sep oct nov dec)
+set MON = (JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC)
+set months = (january february march april may june july august september october november december)
+set Months = (January February March April May June July August September October November December)
+if ($#argv == 1) then
+  echo ${$argv}
+else if ($#argv == 2) then
+  echo ${$argv[1]}[$argv[2]]
+endif

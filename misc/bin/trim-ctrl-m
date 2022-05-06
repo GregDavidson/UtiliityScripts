@@ -1,0 +1,9 @@
+for f
+do
+  ex - $f << 'EOF'
+1,$s/$//
+$g/^[ 	]*[ 	]*$/d
+$g/^[ 	]*[ 	]*$/d
+wq
+EOF
+done

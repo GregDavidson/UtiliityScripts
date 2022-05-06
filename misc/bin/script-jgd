@@ -1,0 +1,18 @@
+#!/bin/bash
+# From: J. Greg Davidson <jgd@ngender.net>
+# Date: 2004-12-02 (ISO date format)
+export PS1_base='\! \W $ '
+default_prefix=$(pwd | sed 's|.*/||' | tr A-Z a-z)
+prefix="${1:-$default_prefix}"
+suffix=script
+typescript="$prefix-$(date -I).$suffix"
+script=/usr/bin/script
+# example: apt-2004-11-03.script
+if [ -f "$typescript" ]; then
+	$script -a "$typescript"
+else
+	$script "$typescript"
+fi
+# maybe put in a post-filter to strip out
+#	Carriage Returns from end of lines
+#	Backspaces and other corrections

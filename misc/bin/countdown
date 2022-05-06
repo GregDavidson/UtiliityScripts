@@ -1,0 +1,37 @@
+#!/bin/csh
+# Author: J. Greg Davidson
+
+clear
+
+if ($#argv) then
+	set i = $argv[1]
+else
+	set i = 100
+endif
+
+if ($#argv > 1) then
+	set l = $argv[2]
+else
+	set l = 2
+endif
+
+if ($#argv > 2) then
+	set d = $argv[3]
+else
+	set d = 1
+endif
+
+while ($i >= $l)
+	echo $i
+	@ i -= $d
+end
+
+set i = 80
+foreach l (a b c d e f g h)
+    foreach i (1 2 3 4 5 6 7 8 9)
+    echo -n $i
+    end
+echo -n $l
+end
+
+echo ""

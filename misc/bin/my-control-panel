@@ -1,0 +1,272 @@
+#!/usr/bin/wishx -f
+
+set control_panel_lib_dir /usr/lib/rhs/control-panel
+set env(CONTROL_PANEL_LIB_DIR) $control_panel_lib_dir
+
+if {[catch {source $control_panel_lib_dir/colorscheme.tcl}] != 0} {
+	catch {source /usr/lib/rhs/control-panel/colorscheme.tcl}
+}
+
+# We include our own modified balloon help stuff to handle
+# the scrolling window.
+# source $control_panel_lib_dir/balloon-help.tcl
+#
+
+#############################################################
+# tix3.6a/library/Balloon.tcl
+# Modified to work for control-panel
+
+set balloon_help 0
+set tixBal(popped) 0
+set tixBal(count) -1
+
+proc tixEnableBalloon {} {
+    global balloon_help
+    set balloon_help 1
+}
+
+proc tixDisableBalloon {} {
+    global balloon_help
+    set balloon_help 0
+}
+
+proc tixAddBalloon {w class msg {initWait 200}} { 
+    global tixBal
+
+    bind $w <Any-Enter>  +[bind $class <Any-Enter>]
+    bind $w <Any-Enter>  "+tixBalStart $w $initWait"
+    bind $w <Any-Leave>  +[bind $class <Any-Leave>]
+    bind $w <Any-Leave>  "+tixBalEnd $w $initWait"
+    bind $w <Motion> +[bind $class <Motion>]
+    bind $w <Motion> "+tixBalMotion $w $initWait"
+    bind $w <Destroy>  +[bind $class <Destroy>]
+    bind $w <Destroy> "+unset tixBal($w); tixBalPopdown"
+
+    set tixBal($w) $msg
+}
+
+proc tixBalStart {w initWait} {
+    global tixBal balloon_help
+
+    if {$balloon_help == "1"} {
+        set tixBal(count)  0
+        set tixBal(popped) 0
+        after $initWait tixBalActivate $w
+    }
+}
+
+proc tixBalEnd {w initWait} {
+    global tixBal
+
+    set tixBal(count)  -1
+    if {$tixBal(popped) == "1"} {
+        tixBalPopdown
+    } 
+}
+
+proc tixBalMotion {w initWait} {
+    global tixBal balloon_help
+
+    if {$balloon_help == "1" && $tixBal(popped) == 0} {
+        incr tixBal(count)
+        after $initWait tixBalActivate $w
+    }
+}
+
+proc tixBalActivate {w} {
+    global tixBal
+
+    if {$tixBal(count) == "-1"} {
+        return
+    } elseif {$tixBal(count) == 0} {
+        tixBalPopup $w
+    } else {
+        incr tixBal(count) -1
+    }
+}
+
+proc tixBalPopup {widget} {
+    global tixBal
+
+    set w .tix_balloon
+
+    catch {
+        toplevel $w
+        set bg    [tixQueryAppResource tixBalloonBg TixBalloonBg #ffff60]
+        set fg    [tixQueryAppResource tixBalloonFg TixBalloonFg black]
+        set width [tixQueryAppResource tixBalloonWidth TixBalloonWidth 180]
+        wm overrideredirect $w 1
+        message $w.msg -bg $bg -fg $fg -aspect 10000
+        pack $w.msg -expand yes -fill both
+    }
+
+    set x [expr [winfo rootx .c]+[lindex [.c bbox $widget] 2]+8]
+    set y [expr int([winfo rooty .c]+[lindex [.c bbox $widget] 3]-32-\
+		[lindex [.s get] 0]*[lindex [.c configure -height] 4])]
+    $w.msg config -text $tixBal($widget)
+    wm geometry $w +$x+$y
+    wm deiconify $w
+    raise $w
+    set tixBal(popped) 1
+}
+    
+proc tixBalPopdown {} {
+    global tixBal
+    set w .tix_balloon
+
+    if {$tixBal(popped) != 0} {
+        wm withdraw $w
+        set tixBal(popped) 0
+    }
+}
+
+proc tixQueryAppResource {name class default} {
+
+    set value [option get . $name $class]
+    if {$value == ""} {
+        return $default
+    } else {
+        return $value
+    }    
+}
+
+
+set module_count 0
+set module_program(0) ""
+set module_bitmap(0) ""
+set module_name(0) ""
+set module_help(0) ""
+set balloon_help 0
+
+proc load_modules {} {
+
+	global control_panel_lib_dir
+	global module_program module_bitmap module_name module_help
+	global module_count
+	
+	set module_count 0
+
+	if {[catch {glob $control_panel_lib_dir/*.init} mods] != "0"} {
+		return
+	}
+	set mods [ lsort $mods ]
+	foreach x $mods {
+		set f [open $x r]
+		gets $f module_program($module_count)
+		gets $f module_bitmap($module_count)
+		gets $f module_name($module_count)
+		set module_help($module_count) ""
+		while {[gets $f line] != "-1"} {
+			if {$module_help($module_count) == ""} {
+				set module_help($module_count) "$line"
+			} else {
+				set module_help($module_count) "$module_help($module_count)\n$line"
+			}
+		}
+		close $f
+		incr module_count
+	}
+}
+
+proc create_ui {} {
+
+	frame .menubar -relief raised -borderwidth 2
+	menubutton .menubar.cp -text "File" -menu .menubar.cp.menu
+	menubutton .menubar.mod -text "Modules" -menu .menubar.mod.menu
+	menubutton .menubar.help -text "Help" -menu .menubar.help.menu
+
+	menu .menubar.cp.menu
+#	.menubar.cp.menu add command -label "About" -command menu_about
+	.menubar.cp.menu add command -label "Quit" -command menu_quit
+
+	menu .menubar.mod.menu
+
+	menu .menubar.help.menu
+	.menubar.help.menu add checkbutton -label "Balloon Help" -variable balloon_help
+
+	pack .menubar.cp .menubar.mod -side left
+	pack .menubar.help -side right
+	tk_menuBar .menubar .menubar.cp .menubar.mod .menubar.help
+
+	canvas .c -scrollregion {0 0 128 212} -width 128 -height 212 \
+		-yscrollcommand ".s set" 
+	scrollbar .s -relief sunken -command ".c yview"
+
+	pack .menubar -side top -fill x
+	pack .s -side right -fill y
+	pack .c -side right -fill both -expand true
+
+#	wm geometry . 147x150
+#	wm minsize . 147 150
+#	wm maxsize . 147 800
+}
+
+proc display_modules {} {
+
+	global module_program module_bitmap module_name module_help
+	global module_count tixBal control_panel_lib_dir
+
+	## Delete Modules Menu
+	.menubar.mod.menu delete 0 last
+
+	## Resize the canvas and scroll region
+	.c configure -height [expr $module_count * 112 + 12]
+	.c configure -scrollregion "0 0 128 [expr $module_count * 112 + 12]"
+
+	## Resize main window (with a max and min) 
+#	if {$module_count < 1} {
+#		wm geometry . 147x150
+#		wm maxsize . 147 150
+#	} elseif {$module_count > 4} {
+#		wm geometry . 147x[expr 4 * 112 + 38]
+#		wm maxsize . 147 [expr $module_count * 112 + 38]
+#	} else {
+#		wm geometry . 147x[expr $module_count * 112 + 38]
+#		wm maxsize . 147 [expr $module_count * 112 + 38]
+#	}
+
+	for {set i 0} {$i < $module_count} {incr i} {
+	        set bm [image create photo -file $control_panel_lib_dir/$module_bitmap($i)]
+		set x [.c create image 64 [expr $i * 112 + 16] -anchor n \
+			-image $bm ]
+		.c create text 64 [expr $i * 112 + 84] -text $module_name($i) \
+			-anchor n -width 128 -justify center 
+
+		## Add bindings to bitmap
+		.c bind $x <Any-Enter> "tixBalStart $x 200"
+		.c bind $x <Any-Leave> "tixBalEnd $x 200"
+		.c bind $x <Double-Button-1> "run_module $i"
+		set tixBal($x) $module_help($i)
+
+		## Add to Modules menu
+		.menubar.mod.menu add command -label $module_name($i) -command "run_module $i"
+	}
+}
+
+proc run_module {i} {
+    global module_program control_panel_lib_dir
+
+    set childpid [ fork ]
+    if { $childpid == 0 } {
+	set childpid [ fork ] 
+	if { $childpid == 0 } {
+	    execl $module_program($i)
+	}
+	execl /bin/true
+    }
+    wait $childpid
+}
+
+proc menu_about {} {
+}
+
+proc menu_quit {} {
+	exit 0
+}
+
+##########################################################
+## Main
+
+create_ui
+load_modules
+display_modules

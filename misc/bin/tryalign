@@ -1,0 +1,38 @@
+#!/usr/bin/awk -f
+# align columns under proportional font
+# input is columnar fields use spaces to alignm given non-proportional font
+# output same fields separated by tabs to align given helvetica under xemacs
+# BUG: output is not quite right!
+BEGIN{ one_tab=5; }
+function max(i, j) { return i > j ? i : j; }
+{
+	if (debug)
+		max_fields = max(NF, max_fields);
+	line_val[NR] = $0;
+	for (field = 1; field <= NF; field++)
+		field_width[field] = max(field_width[field], length($field));
+}
+function tabs_width(field, width) { return ntabs=int((width+(field==1))/(4+(field==1))); }
+END {
+	if (debug)	{
+		for (f = 1; f < max_fields; f++)
+			printf "%d(%d) ",  field_width[f], tabs_width(f, field_width[f]);
+		print field_width[max_fields], tabs_width(max_fields, field_width[max_fields]);
+	}
+	for (line = 1; line <= NR; line++) {
+		n = split(line_val[line], a);
+		if (debug)	{
+			for (f = 1; f < n; f++)
+				printf "%d(%d) ",  length(a[f]), tabs_width(f, length(a[f]));
+			print length(a[n]), tabs_width(n, length(a[n]));
+		}
+		for (field=1; field < n; field++) {
+			printf("%s\t", a[field]);
+			goal = tabs_width(field, field_width[field]);
+			for (len = tabs_width(field, length(a[field])) ; len < goal; len ++)
+				printf("\t");
+		}
+#		print (field == n) ? a[field] : "";
+		print a[n]
+	}
+}

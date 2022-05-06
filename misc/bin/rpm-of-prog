@@ -1,0 +1,14 @@
+#!/bin/bash
+script_name=${0##*/}		# strip off directory path
+
+for prog_name; do
+  prog_type=`type -t "$prog_name"`
+  prog_file=`type -P "$prog_name"`
+  if [ -n "$prog_file" ]; then
+    rpm -qf "$prog_file"
+  elif [ -n "$prog_type" ]; then
+    >&2 echo "$script_name: `type "$prog_name"`"
+  else
+    >&2 echo "$script_name: No command named $prog_name"
+  fi 
+done

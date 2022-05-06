@@ -1,0 +1,9 @@
+#!/bin/bash
+project="$1" ; shift
+dir=`find $HOME/Play -type d -name "$project"`
+cd $dir
+simple_require paths
+for d in bin Bin; do
+	[ -d "$d" ] && path_add -a "$d"
+done
+emacs-jgd --title "$project"

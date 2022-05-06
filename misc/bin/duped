@@ -1,0 +1,9 @@
+:
+#duped - report the files which are the same
+find "$@" -type f -exec ls -l {} \; | sort -n |
+awk '
+	$5==last_size{dup=1; print last_size, last_name}
+	$5!=last_size && dup{print last_size, last_name; dup=0}
+	{last_size=$5 ; last_name=$9}
+	END { if (dup) {print last_size, last_name} }
+'

@@ -1,0 +1,3 @@
+dump 0uf - /local/home/greg | gzip | rsh b dd of=/local/backup/greg/greg.dump0
+dump 0uf - /local/home/greg.Mail | gzip | rsh b dd of=/local/backup/greg/mail.dump0
+dump 0uf - /usr/local/home/greg | gzip | rsh b dd of=/local/backup/greg/more.dump0

@@ -1,0 +1,1 @@
+dtree $* | xmessage -fn 5x7 -name "$1" -buttons quit -file - &

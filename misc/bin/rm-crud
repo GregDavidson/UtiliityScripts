@@ -1,0 +1,1 @@
+find ${*:-.} -type f \( -name '#*' -o -name core -o -name '*~' -o -name a.out \) -exec rm -f {} \;

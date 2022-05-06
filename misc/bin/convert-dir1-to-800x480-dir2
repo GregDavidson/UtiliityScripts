@@ -1,0 +1,10 @@
+#!/bin/sh
+
+size=800x480
+[ $# = 2 ] || (echo Usage $0 dir1 dir2 >&2 ; exit 1)
+[ -d $1 ] || (echo $0: no directory $1 >&2 ; exit 2)
+[ -d $2 ] || mkdir $2 || (echo $0: mkdir $2 failed >&2 ; exit 3)
+('cd' $1; for f1 in *.jpg; do echo "$f1"; done) |
+  while read f; do
+    convert -resize $size "$1/$f" "$2/$f"
+  done

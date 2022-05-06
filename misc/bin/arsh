@@ -1,0 +1,38 @@
+#!/bin/sh
+
+die() { code=$1 ; shift ; echo "$*" >&2 ; exit $code ; }
+
+set -- `getopt ab "$@"`
+[ $? = 0 ] || die 2 "Usage: $0 [-ab] command"
+all=""
+bg=""
+for i ; do
+   case "$i" ; in
+	   -a)	   all=yes; shift;;
+	   -b)	   bg=yes;  shift;;
+	   --)	   shift; break;;
+   esac
+done
+
+hostname=`hostname`
+list=""
+for l in /clients ; do
+  if [ -f $l ] ; then
+    list=$l
+    break
+  fi
+done
+
+[ -n "$list" ] || die 2 "$0 error: Can't find client list"
+
+for f in `cat $list | grep -v '^#'` ; do
+    if [ $f != $hostname -a -z "$all" ] ; then
+	if [ -n "$bg" ] ; then
+	    /usr/bin/rsh $f "$@" &
+	    echo rsh $f "$@" &
+        else
+	    echo "rsh $f $@"
+	    /usr/bin/rsh $f "$@"
+	fi
+    fi
+done

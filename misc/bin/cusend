@@ -1,0 +1,7 @@
+#
+foreach f ($argv)
+  echo $f
+  echo '~>:'$f
+  cat $f
+  echo '~>'
+end

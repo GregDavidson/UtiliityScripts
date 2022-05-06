@@ -1,0 +1,14 @@
+#!/bin/bash
+if ps agx | awk '$5 ~ /'"$1"'/{got1=1; print $1 "\t" $5}END{if (!got1) exit 1}'
+then
+	echo -n 'Kill them all? '
+	read signal junk
+	case "$signal" in
+		[yY]*) signal=15;;
+		[nN]*) exit 0;;
+		"") exit 0;;
+		[0-9]*) ;;
+		*) exit 1;;
+	esac
+	kill -"$signal" $(ps agx | awk '$5 ~ /'"$1"'/{print $1}')
+fi

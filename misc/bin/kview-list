@@ -1,0 +1,5 @@
+#!/bin/sh
+echo '[KView Image List]'
+for d in `find "${@:-.}"  -type d  ! '(' -name .pics -prune ')' ! -name '.thumb*'  ! -name '*thumb*' -print` ; do
+find $d -maxdepth 1 '(' -name '*.[jJ][pP]*[gG]' -o -name '*.[gG][iI][fF]' ')' -printf "File:%p\n"
+done

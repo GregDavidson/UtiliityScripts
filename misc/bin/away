@@ -1,0 +1,25 @@
+#
+foreach p ($argv)
+
+    if (! -f $p) then
+        echo away: no file $p
+        continue
+    endif
+
+    set d = $p:h
+    set f = $p:t
+    if ($d == $f) set d = .
+
+    if (! -w $d) then
+        echo away: cannot write on $d
+        continue
+    endif
+
+    if (-e $d/.missing) then
+        echo $f >>$d/.missing
+    else
+        echo $f >$d/.missing
+    endif
+    rm $p
+
+end
