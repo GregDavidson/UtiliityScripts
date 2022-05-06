@@ -1,0 +1,38 @@
+#!/bin/bash
+Usage="Usage: ${0##*/}: [num-days-back] head-coach-folder head-coach-teams..."
+
+include=selp-list-include
+. "${0%/*}/$include" || {
+    >&2 echo "$0 error: Can't find file $include"
+    exit 1
+}
+
+if is_whole_number "$1"; then
+    num_days_back="$1"
+    shift
+else
+    num_days_back=''
+fi
+
+[ $# -ge 2 ] || { >&2 echo "$Usage"; exit 1; }
+
+my_home="$1"; shift
+my_teams=( "$@" )
+
+if [[ -n "$num_days_back" ]]; then
+  echo "###### CONTENT ADDED OR CHANGED WITHIN THE LAST $num_days_back DAYS:"
+  echo ''
+  home_report "$my_home" "$filters -mtime -$num_days_back"
+  for team in ${my_teams[@]}; do
+    team_report "$team" "$filters -mtime -$num_days_back"
+  done
+  echo ''
+fi
+
+echo '###### ALL THE CONTENT:'
+echo ''
+home_report "$my_home" "$filters"
+for team in ${my_teams[@]}; do
+    team_report "$team" "$filters"
+    echo ''
+done

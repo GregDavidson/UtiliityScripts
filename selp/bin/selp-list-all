@@ -1,0 +1,29 @@
+#!/bin/bash
+Usage="Usage: ${0##*/}: [num-days-back]"
+
+include=selp-list-include
+. "${0%/*}/$include" || {
+    >&2 echo "$0 error: Can't find file $include"
+    exit 1
+}
+
+is_whole_number_or_empty "$1" || {
+  >&2 echo "$Usage"; exit 1
+}
+
+teams=(Team-Tamara Team-Ellen--Tamara Team-Lynn--Tamara Team-Nicole--Ellen Team-Victoria--Ellen Team-Patrick--Eugene Team-Sasha--Eugene Team-Jess--Greg Team-Matt--Greg Team-Marcelino--Lynn Team-Veronica--Lynn)
+
+if [[ -n "$1" ]]; then
+    echo "###### CONTENT ADDED OR CHANGED WITHIN THE LAST $1 DAYS:"
+    for team in ${teams[@]}; do
+      team_report "$team" "$filters -mtime -$1"
+      echo ''
+    done
+    echo ''
+fi
+
+echo '###### ALL THE CONTENT:'
+for team in ${teams[@]}; do
+  team_report "$team" "$filters"
+echo ''
+done

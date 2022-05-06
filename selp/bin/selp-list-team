@@ -1,0 +1,26 @@
+#!/bin/bash
+Usage="Usage: ${0##*/}: CoachFirstName-e.g.'Jess' [num-days-back]"
+num_days="${2:-}"
+
+include=selp-list-include
+. "${0%/*}/$include" || {
+  >&2 echo "$0 error: Can't find file $include"
+  exit 1
+}
+
+for team in "$1" Team-"$1"--* "."; do
+    [[ -n "$team" && -d "$team" ]] && break
+done
+
+! [[ . = "$team" ]] || ! is_whole_number_or_empty "$num_days" || {
+  >&2 echo "$Usage"; exit 1
+}
+
+if [[ -n "$num_days" ]]; then
+  echo "###### CONTENT ADDED OR CHANGED WITHIN THE LAST $num_days DAYS:"
+  team_report "$team" "$filters -mtime -$num_days"
+  echo ''
+fi
+
+echo '###### ALL THE CONTENT:'
+team_report "$team" "$filters"

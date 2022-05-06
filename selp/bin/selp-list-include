@@ -1,0 +1,45 @@
+#!/bin/bash
+
+coach_folders=~/Data/Google-Drive/SELP/Coach-Folders
+'cd' ~/Data/Google-Drive/SELP/Coach-Folders || {
+  >&2 echo "$0 error: Can't find folder $coach_folders"
+  exit 1
+}
+
+set -eu
+# track last executed command
+last_command='none yet'
+current_command='none yet'
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# report error before exiting
+trap '[[ $? -eq 0 ]] || echo "exit code $?: ${last_command}"' EXIT
+
+whole_number='^[1-9][0-9]*$'
+is_whole_number() {
+  [[ "$1" =~ $whole_number ]]
+}
+
+is_whole_number_or_empty() {
+  [[ -z "$1" ]] || is_whole_number "$1"
+}
+
+filters="! -type f -prune -o -name '*~' -prune -o"
+
+shopt -s nullglob
+
+home_report() {	# $1 is SELP Home Folder path, $2 is find command filters
+    echo "** $1/"
+    echo ''
+    ( 'cd' "$1"
+      local files=( * )
+      (( ${#files[@]} )) && find "${files[@]}" $2 -printf "%TY-%Tm-%Td %p\n"
+    )  | sort
+}
+
+team_report() {	# $1 is SELP Team Folder path, $2 is find command filters
+    ( cd "$1"
+      for d in *-*; do
+          echo ''
+          home_report "$d" "$2"
+      done )
+}

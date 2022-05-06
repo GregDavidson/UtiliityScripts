@@ -1,0 +1,19 @@
+#!/bin/bash
+PgmName=""${0##*/}""
+PgmDir="${0%/*}"
+Usage="Usage: $PgmName: [num-days-back]"
+list_head="$PgmDir/selp-list-head"
+
+[[ -f "$list_head" && -x "$list_head" ]] || {
+  >&2 echo "$0 error: Can't find script $list_head"
+  exit 1
+}
+
+my_home=Team-Tamara/Ellen-Williams
+my_teams=( Team-Ellen--Tamara Team-Nicole--Ellen Team-Victoria--Ellen )
+
+if [[ -n "$1" ]]; then
+  "$list_head" "$1" "$my_home" "${my_teams[@]}"
+else
+  "$list_head" "$my_home" "${my_teams[@]}"
+fi

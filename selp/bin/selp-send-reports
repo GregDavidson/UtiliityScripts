@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Usage="Usage: ${0##*/}: EVENT-NAME DAYS-BACK"
+Usage="Usage: ${0##*/}"
+
+include=selp-list-include
+. "${0%/*}/$include" || {
+    >&2 echo "$0 error: Can't find file $include"
+    exit 1
+}
+
+cd ~/Data/Google-Drive/SELP/Coach-Folders
+days_back=3
+event="classroom 8"
+all="SELP: materials in the coaches folders after $event"
+teams="SELP: materials in your team folders after $event"
+team="SELP: materials in your team folder after $event"
+
+tamara='tamaradanner@yahoo.com'
+ellen='ellenrbwilliams@gmail.com'
+eugene='emitchell777@outlook.com'
+lynn='lynn.dobbs@bethechange.net'
+greg='greg.davidson+selp@gmail.com'
+
+Limbo/Bin/selp-list-all "$days_back" | ssh ngender.org mailx -s "'$all'" -c "'$greg'" "'$tamara'"
+Limbo/Bin/selp-list-ellens "$days_back" |ssh ngender.org mailx -s "'$teams'" "'$ellen'"
+Limbo/Bin/selp-list-eugenes "$days_back" |ssh ngender.org mailx -s "'$teams'" "'$eugene'"
+Limbo/Bin/selp-list-lynns "$days_back" |ssh ngender.org mailx -s "'$teams'" "'$lynn'"
+
+{
+echo 'Team-Jess--Greg' 'jessicaj.engel@gmail.com' "$greg"
+echo 'Team-Matt--Greg' 'matthewkucirek@gmail.com' "$greg"
+echo 'Team-Nicole--Ellen' 'ndisney6@gmail.com' "$ellen"
+echo 'Team-Victoria--Ellen' 'cunananvictoria5@gmail.com' "$ellen"
+echo 'Team-Patrick--Eugene' 'pyassini@peakhealthgroup.com' "$eugene"
+echo 'Team-Sasha--Eugene' 'sashazeilig@gmail.com' "$eugene"
+echo 'Team-Marcelino--Lynn' 'gomez1984@yahoo.com' "$lynn"
+echo 'Team-Veronica--Lynn' 'sandiego929@gmail.com' "$lynn"
+} | while read d m c; do
+    >&2 echo Limbo/Bin/selp-list-team "$d" "$days_back" |
+    Limbo/Bin/selp-list-team "$d" "$days_back" |
+	  ssh ngender.org mailx -s "'$team'" -c "$c" "'$m'"
+done

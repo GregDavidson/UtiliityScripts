@@ -1,0 +1,20 @@
+#!/bin/bash
+prune="-name Limbo -prune -o -name Handouts -prune -o -name '*~' -prune -o"
+cd ~/Data/Google-Drive/SELP/Coach-Folders
+for d in Team-Tamara/Greg-Davidson; do
+  echo "** $d/"
+  echo ""
+  ("cd" "$d" ; find * $prune -type f -printf "%TY-%Tm-%Td %p\n")  | sort 
+done
+for team in Team-Jess--Greg Team-Matt--Greg; do
+  ( "cd" "$team"
+    echo ""
+    echo "* $team/"
+    for d in *-*; do
+      echo ""
+      echo "** $d/"
+      echo ""
+      ("cd" "$d" ; find * $prune -type f -printf "%TY-%Tm-%Td %p\n")  | sort 
+    done
+  )
+done
