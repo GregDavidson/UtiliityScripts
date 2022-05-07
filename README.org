@@ -1,8 +1,6 @@
 * ~/SW: My utility script collection
 
-** TL/DR
-
-Here may be dragons!
+** TL;DR: Here May Be Dragons!
    
 Most of the utility scripts in this repository are ancient and many will do
 nothing useful on modern platforms! A few are gems which will greatly contribute
@@ -11,7 +9,7 @@ collection to a public =git= repository I /may/ (no promises!) slowly
 - add some guidance as to which utilities here are still useful
 - add some documentation as to how to use those gems
 - improve some of these utilities
-- remove or hide some of the totally obsolete dross
+- remove or hide some of the salvageable dross
 
 You might enjoy the bit of POSIX shell code at the bottom!
 
@@ -20,7 +18,7 @@ You might enjoy the bit of POSIX shell code at the bottom!
 I've been using [[https://en.wikipedia.org/wiki/POSIX][POSIX Systems]] since 1976, including
 - Many BSD Variants :: powerful and elegant!
 - Bell Labs Research Unix :: elegant but not so powerful
-- AT&T System V Unix :: hated it!
+- AT&T System V Unix :: the less said, the better!
 - GNU/Linux :: rich and powerful, not elegant!
 
 Over the years I've written lots of small utility scripts in shells and other
