@@ -1,0 +1,59 @@
+* ~/SW: My utility script collection
+
+** TL/DR
+
+Here may be dragons!
+   
+Most of the utility scripts in this repository are ancient and many will do
+nothing useful on modern platforms! A few are gems which will greatly contribute
+to the quality of your computing experience. Now that I've reified this
+collection to a public =git= repository I /may/ (no promises!) slowly
+- add some guidance as to which utilities here are still useful
+- add some documentation as to how to use those gems
+- improve some of these utilities
+- remove or hide some of the totally obsolete dross
+
+You might enjoy the bit of POSIX shell code at the bottom!
+
+** Details
+  
+I've been using [[https://en.wikipedia.org/wiki/POSIX][POSIX Systems]] since 1976, including
+- Many BSD Variants :: powerful and elegant!
+- Bell Labs Research Unix :: elegant but not so powerful
+- AT&T System V Unix :: hated it!
+- GNU/Linux :: rich and powerful, not elegant!
+
+Over the years I've written lots of small utility scripts in shells and other
+interpreted languages and a few small utility programs in compiled languages.
+Most of them have migrated to being somewhere under this ~/SW/ hierarchy,
+although I still have some of them under ~/Bin and other places.
+
+Amazingly, most of these have continued to work across the changes and evolution
+of different POSIX platforms. Many of these utilities are now obsolete, even
+where they still run.  See the TL;DR above for my hopes in this regard.
+
+I have login scripts which add the appropriate directories into my path, e.g.
+with code like this:
+
+#+begin_src bash
+  shopt -s nullglob
+  for d in ~/[Bb]in ~/SW/*/[Bb]in{,-`arch`} ~/Shared/Bin /usr/bin/mh ~/.cargo/bin /usr/local/SW/*/[Bb]in
+  do
+    case ":$PATH:" in
+        ":$d:") ;;
+        ,*) PATH="$d:$PATH" ;;
+    esac
+  done
+  export PATH
+  shopt -u nullglob
+#+end_src
+
+P.S. My 1976 Research Unix System had a 4K x 4K graphics system with 3D
+graphics - smoothly scalable and transformable in realtime! It was better in
+many ways than most of what's available now. But of course I didn't own it as it
+cost at least a quarter of a million 1976 dollars! My unpaid and underpaid work
+in those days was automatically owned by the University of California - that's
+capitalism for you!
+
+I love owning or freely sharing the means of my production and I hope to soon
+have something as nice or better than I had in 1976!
