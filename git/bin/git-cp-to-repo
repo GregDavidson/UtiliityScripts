@@ -1,0 +1,105 @@
+#!/usr/bin/sh
+pgm="$(basename "$0")"
+usage="Usage: $pgm dir-in-git-repo-1 git-repo-2"
+purpose="Copy dir-in-git-repo-1 and history to git-repo-2"
+
+# Thanks to
+# https://stackoverflow.com/users/6118285/thymo
+# who posted on
+# https://stackoverflow.com/questions/41811986/git-move-directory-to-another-repository-while-keeping-the-history
+
+# What i'd like is to be able to say
+# git-cp-to-repo file... repo
+# and have each file in file... copied
+# from its repo (not necessarily the same one)
+# with all of its history in its repo
+# to the target repo
+# under the same relative path
+# AND where that file is just a working file or merely staged
+# - i.e. not yet part of the current branch
+# to have it copied into the new repo with the same status
+
+# RANT: This should be built in to git, along with
+# git-mv-to-new-repo and git-rm-with-history!
+# How can people accept git without these equivalents
+# of standard Posix file functionality? END-RANT!
+
+# With the current git features set these things are hard!
+# Eventually this script might provide these features
+# - but it's not there yet!!
+
+# Issues
+# Contents of directory $1 are going into $2!!
+# - instead of under $2/$(basename $1)
+# - necessitating manually moving them afterwards
+# Files under $1 not yet part of the repo are ignored!!
+# - Fix for now: check in everything to be moved!
+# We're not checking if the temp branches already exist!!!
+# - we should warn the user and pick a new name
+# We're not checking if all the git commands succeed!!!
+# We're assuming the main branch in $repo2 is main!!
+# - we should capture the current branch and use that
+# Does the entity to be moved need to be a directory??
+# - if not, change that -d to a simple -e??
+# We don't support moving multiple entities!!
+# - We could just do a loop
+# - Is there a better way when they're part of the same repo?
+
+err_out() { >&2 printf '%s\n' "$*"; }
+err_msg() { local level="$1"; shift; err_out "$pgm $level: $*"; }
+err_exit() { local code="$1"; shift; err_msg error "$*"; exit "$code"; }
+usage_err() {
+  local code="${1:-2}"
+  [[ "$#" -eq 0 ]] || shift
+  [[ "$#" -eq 0 ]] || err_msg error "$*"
+  err_out "Usage: $usage"
+  exit "$code"
+}
+dir_or_err() {
+  local code="$1"; shift
+  [[ -d "$1" ]] || usage_err "$code" No directory "$1"
+}
+
+[ 2 == $# ] || usage_err 10 "Expected 2 arguments!"
+
+for d in "$1" "$2"; do dir_or_err 11 "$d"; done
+
+path1="$(realpath "$1")"
+repo1="$(dirname "$path1")"
+while [ / != "$repo1" ] && ! [ -d "$repo1/.git" ]; do
+  repo1="$(dirname "$path1")"
+done
+[ / != "$repo1" ] ||  usage_err 12 "$1 not in git repo"
+repo1_git="$repo1/.git"
+repo1_dir="$(realpath --relative-to "$repo1" "$path1")" # dir to move
+
+repo2="$(realpath "$2")"
+dir_or_err 13 "$repo2"
+
+for target in "$repo2/$repo1_dir" ; do
+  ! [ -e "$target" ] || err_exit 14 "$target already exists" 
+done
+
+repo1_temp=temp
+repo2_temp=temp
+# check that these _temp branches do not exist!
+
+cd "$repo1"
+git subtree split -P "$repo1_dir" -b "$repo1_temp"
+
+cd "$repo2"
+repo2_main=main                          # capture current branch!!
+git checkout --orphan "$repo2_temp"       # Create a branch with no history
+git pull "$repo1_git" "$repo1_temp"       # Pull the commits from the subtree
+git checkout "$repo2_main"                # Go back to the original branch
+# Merge back unrelated commits
+git merge --allow-unrelated-histories "$repo2_temp"
+git branch -d "$repo2_temp"               # Delete the temporary branch
+
+cd "$repo1"
+printf 'Delete %s temporary branch %s? [y/n]' "$repo1" "$repo1_temp"
+read ans junk
+case "$ans" in
+y*) git branch -D "$repo1_temp" ;;
+*) printf 'Repository %s branch %s still exists!\n' "$repo1" "$repo1_temp" ;;
+esac
