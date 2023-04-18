@@ -16,3 +16,53 @@
 - [[file:../bin/index-org-links][index-org-links]] :: latest
 	- dependent on =rg= aka =ripgrep=
 - [[file:../bin/org-links.bash][org-links.bash]] :: obsolete??
+
+** Criticism 
+
+*** Wednesday, 25 May 2022
+
+We need to make sure we're correctly handling all links, e.g. links to sections
+within documents. Review OrgMode link syntax!
+
+Separate finding vs. processing files
+- Finding files
+      - Use rg for this as currently
+- Processing files
+      - with a shell function or separate script
+      - converting .org files to index paragraphs(s)
+      - use =sed= for link extraction
+      - extract =TITLE= or first top-level header
+
+Consider overwriting requiring confirmation
+- With --create-or-clobber flag
+- By explicitly ending path with the index file
+- Once most prospective directories are indexed
+      - call with --clobber flag
+      - missing index file should require confirmation!
+
+** Original Concept for Indexing Org-Mode Files
+
+Every .org mode file under this account should be linked to by the nearest
+- INDEX.org file -- first choice
+- README.org file -- second choice
+
+By nearest, we mean
+- in the same directory, or if none
+- in the nearest ancestor directory
+
+A tool, e.g. a shell script, should be available to
+- report all broken links
+- attach all disconnected files
+
+*** Possibly Obsolete Ideas
+
+An earlier version of this idea said:
+
+All file links should begin with either
+   file:greg/
+or
+  file:greg.*/
+i.e. greg.a, etc.
+
+- Were these supposed to be leveraging symlinks?
+- Or did I just forget the =~= in front of =greg=?
